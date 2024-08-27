@@ -6,3 +6,6 @@
 /RemoteCtrl/RemoteCtrl/x64/Debug/*.pdb
 /RemoteCtrl/RemoteCtrl/x64/Debug
 /RemoteCtrl/RemoteCtrl/*.aps
+/RemoteCtrl/Debug
+/RemoteCtrl/RemoteClient/Debug
+/RemoteCtrl/RemoteCtrl/Debug
