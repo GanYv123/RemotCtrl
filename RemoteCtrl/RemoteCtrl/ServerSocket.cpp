@@ -51,7 +51,7 @@ BOOL CServerSocket::initSocket() {
 
 BOOL CServerSocket::AcceptClient() {
 	SOCKADDR_IN cli_adr;
-	int cli_adr_sz;
+	int cli_adr_sz = sizeof(cli_adr);
 	m_client = accept(m_serv_socket, (SOCKADDR*)&cli_adr, &cli_adr_sz);
 	if (m_client == -1) {
 		return FALSE;
@@ -70,7 +70,7 @@ int CServerSocket::DealCommand() {
 	memset(buffer, 0, BUFFER_SIZE);
 	size_t index = 0;
 	while (TRUE) {
-		int len = recv(m_client, buffer+index, BUFFER_SIZE - index, 0);
+		int len = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
 		if (len <= 0) {
 			return -1;
 		}
@@ -89,7 +89,13 @@ int CServerSocket::DealCommand() {
 }
 
 BOOL CServerSocket::Send(const char* pData, int nSize) {
+	if (m_client == -1) return FALSE;
 	return send(m_client, pData, nSize, 0) > 0;
+}
+
+BOOL CServerSocket::Send(CPacket& pack) {
+	if (m_client == -1) return FALSE;
+	return send(m_client, pack.Data(), pack.size(), 0) > 0;
 }
 
 
@@ -133,12 +139,12 @@ CServerSocket::CHelper::~CHelper() {
  */
 CPacket::CPacket() :sHead(0), nLength(0), sCmd(0), sSum(0) {}
 //复制构造函数
-CPacket::CPacket(const CPacket& packet) {
-	sHead = packet.sHead;
-	nLength = packet.nLength;
-	sCmd = packet.sCmd;
-	strData = packet.strData;
-	sSum = packet.sSum;
+CPacket::CPacket(const CPacket& pack) {
+	sHead = pack.sHead;
+	nLength = pack.nLength;
+	sCmd = pack.sCmd;
+	strData = pack.strData;
+	sSum = pack.sSum;
 }
 
 /**
@@ -173,7 +179,7 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) {
 		/*- - -*/
 		if (nLength > 4) {
 			strData.resize(nLength - 2 - 2);
-			memcpy((void*)strData.c_str(),pData + i,nLength - 4);
+			memcpy((void*)strData.c_str(), pData + i, nLength - 4);
 			i += nLength - 4;
 		}
 		/*- - -*/
@@ -181,13 +187,26 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) {
 		i += 2;
 		WORD sum = 0;
 		for (size_t j = 0; j < strData.size(); j++) {
-			sum += BYTE(strData[i]) & 0xFF;
+			sum += (BYTE(strData[j]) & 0xFF);
 		}
 		if (sum == sSum) {//解析成功
 			nSize = i;
 			return;
+			//FFFE 0900 0000 0100 432C442C46 2501
 		}
 		nSize = 0;
+	}
+}
+
+CPacket::CPacket(DWORD nCmd, const BYTE* pData, size_t nSize) {
+	sHead = 0xFEFF;
+	nLength = nSize + 4;//数据长度 = cmd + 校验
+	sCmd = nCmd;
+	strData.resize(nSize);
+	memcpy((void*)strData.c_str(), pData, nSize);
+	sSum = 0;
+	for (size_t j = 0; j < strData.size(); j++) {
+		sSum += (BYTE(strData[j]) & 0xFF);
 	}
 }
 
@@ -202,4 +221,24 @@ CPacket& CPacket::operator=(const CPacket& pack) {
 	strData = pack.strData;
 	sSum = pack.sSum;
 	return *this;
+}
+
+int CPacket::size() {
+	return nLength + 6;
+}
+
+const char* CPacket::Data() {
+	strOut.resize(nLength + 6);
+	BYTE* pData = (BYTE*)strOut.c_str();
+	*(WORD*)pData = sHead;
+	pData += 2;
+	*(DWORD*)pData = nLength;
+	pData += 4;
+	*(WORD*)pData = sCmd;
+	pData += 2;
+	memcpy(pData,strData.c_str(),strData.size());
+	pData += strData.size();
+	*(WORD*)pData = sSum;
+	
+	return strOut.c_str();
 }

@@ -4,14 +4,21 @@
 #include "framework.h"
 
 /* 用于数据的 包、帧 */
+
+
 class CPacket {
 public:
 	/*函数*/
 	CPacket();
 	CPacket(const CPacket& packet);
 	CPacket(const BYTE* pData,size_t& nSize);
+	CPacket(DWORD nCmd,const BYTE* pData,size_t nSize);
+
 	~CPacket();
 	CPacket& operator=(const CPacket& pack);
+
+	int size();
+	const char* Data();
 
 	/*包 变 量*/
 	WORD sHead;			//固定位FEFF
@@ -19,7 +26,9 @@ public:
 	WORD sCmd;			//控制命令
 	std::string strData;//包数据
 	WORD sSum;			//和校验
+	std::string strOut; //整包数据
 };
+
 
 class CServerSocket {
 public:
@@ -28,6 +37,7 @@ public:
 	BOOL AcceptClient();
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
+	BOOL Send(CPacket& pack);
 private:
 	SOCKET m_serv_socket;
 	SOCKET m_client;
