@@ -58,16 +58,34 @@ BOOL CServerSocket::AcceptClient() {
 	}
 	return TRUE;
 }
+
+/**
+ * 处理命令
+ */
+#define BUFFER_SIZE 4096
 int CServerSocket::DealCommand() {
 	if (m_client == -1) return FALSE;
-	char buffer[1024] = "";
+
+	char* buffer = new char[BUFFER_SIZE];
+	memset(buffer, 0, BUFFER_SIZE);
+	size_t index = 0;
 	while (TRUE) {
-		int len = recv(m_client, buffer, sizeof(buffer), 0);
+		int len = recv(m_client, buffer+index, BUFFER_SIZE - index, 0);
 		if (len <= 0) {
 			return -1;
 		}
-		//TODO:处理命令
+		size_t size_len = static_cast<size_t>(len);
+		index += size_len;
+		size_len = index;
+
+		m_packet = CPacket((BYTE*)buffer, size_len);
+		if (len > 0) {
+			memmove(buffer, buffer + size_len, BUFFER_SIZE - size_len);
+			index -= size_len;
+			return m_packet.sCmd;
+		}
 	}
+	return -1;
 }
 
 BOOL CServerSocket::Send(const char* pData, int nSize) {
@@ -107,4 +125,81 @@ CServerSocket::CHelper::CHelper() {
 
 CServerSocket::CHelper::~CHelper() {
 	CServerSocket::releaseInstance();
+}
+
+/**
+ * 构造函数
+ * 初始化包成员变量
+ */
+CPacket::CPacket() :sHead(0), nLength(0), sCmd(0), sSum(0) {}
+//复制构造函数
+CPacket::CPacket(const CPacket& packet) {
+	sHead = packet.sHead;
+	nLength = packet.nLength;
+	sCmd = packet.sCmd;
+	strData = packet.strData;
+	sSum = packet.sSum;
+}
+
+/**
+ * @argument:
+ * nSize:数据的字节大小
+ */
+CPacket::CPacket(const BYTE* pData, size_t& nSize) {
+	size_t i = 0;
+	for (; i < nSize; i++) {
+		if (*(WORD*)(pData + i) == 0xFEFF) { //校验包头
+			sHead = *(WORD*)(pData + i);
+			i += 2;//一个WORD 2byte
+			break;
+		}
+
+		if (i + 8 > nSize) { //解析不成功 length + cmd +sum
+			nSize = 0;
+			return;/*大小不完整的包*/
+		}
+
+		nLength = *(DWORD*)(pData + i);
+		i += 4;
+		/*- - -*/
+		//此处 i = length 之前的字节数
+		if (nLength + i > nSize) { //包没完全接收到，有残缺
+			nSize = 0;
+			return;
+		}
+
+		sCmd = *(WORD*)(pData + i);
+		i += 2;
+		/*- - -*/
+		if (nLength > 4) {
+			strData.resize(nLength - 2 - 2);
+			memcpy((void*)strData.c_str(),pData + i,nLength - 4);
+			i += nLength - 4;
+		}
+		/*- - -*/
+		sSum = *(WORD*)(pData + i);
+		i += 2;
+		WORD sum = 0;
+		for (size_t j = 0; j < strData.size(); j++) {
+			sum += BYTE(strData[i]) & 0xFF;
+		}
+		if (sum == sSum) {//解析成功
+			nSize = i;
+			return;
+		}
+		nSize = 0;
+	}
+}
+
+CPacket::~CPacket() {
+}
+
+CPacket& CPacket::operator=(const CPacket& pack) {
+	if (this == &pack) return *this;
+	sHead = pack.sHead;
+	nLength = pack.nLength;
+	sCmd = pack.sCmd;
+	strData = pack.strData;
+	sSum = pack.sSum;
+	return *this;
 }
