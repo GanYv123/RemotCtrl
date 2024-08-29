@@ -38,6 +38,7 @@ public:
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(CPacket& pack);
+	BOOL getFilePath(std::string& strPath);
 private:
 	SOCKET m_serv_socket;
 	SOCKET m_client;

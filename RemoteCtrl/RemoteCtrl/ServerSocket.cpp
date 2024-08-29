@@ -98,6 +98,14 @@ BOOL CServerSocket::Send(CPacket& pack) {
 	return send(m_client, pack.Data(), pack.size(), 0) > 0;
 }
 
+BOOL CServerSocket::getFilePath(std::string& strPath) {
+	if (m_packet.sCmd == 2) {
+		strPath = m_packet.strData;
+		return TRUE;
+	}
+	return FALSE;
+}
+
 
 /**
  * @purpose:网络环境初始化
