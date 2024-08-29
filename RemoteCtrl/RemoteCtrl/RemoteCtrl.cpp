@@ -32,7 +32,7 @@ void Dump(BYTE* pData,size_t nSize) {
 
 int MakeDriverInfo() {//1==>A 2==>B ...
 	std::string result;
-	for (size_t i = 1; i <= 26; i++) { //改变当前驱动
+	for (int i = 1; i <= 26; i++) { //改变当前驱动
 		if (_chdrive(i) == 0) {
 			if (result.size()) {
 				result += ',';
@@ -112,6 +112,51 @@ int MakeDirectoryInfo() {
 	return 0;
 }
 
+int RunFile() {
+	std::string strPath;
+	CServerSocket::getInstance()->getFilePath(strPath);
+	ShellExecuteA(NULL,NULL,strPath.c_str(),NULL,NULL,SW_SHOWNORMAL);
+	CPacket pack(3, NULL, 0);
+	CServerSocket::getInstance()->Send(pack);
+	return 0;
+}
+
+int DownloadFile() {
+	std::string strPath;
+	CServerSocket::getInstance()->getFilePath(strPath);
+	FILE* pFile = nullptr;
+	errno_t err = fopen_s(&pFile,strPath.c_str(),"rb");
+
+	long long data = 0;
+	if (err != 0) {
+		CPacket pack(4, (BYTE*)&data, sizeof(long long));
+		CServerSocket::getInstance()->Send(pack);
+		return -1;
+	}
+	
+	if (pFile != nullptr) {
+		/*获取文件大小*/
+		fseek(pFile, 0, SEEK_END);
+		data = _ftelli64(pFile);
+		CPacket head(4, (BYTE*)&data, sizeof(long long));
+		//CServerSocket::getInstance()->Send(head);
+		fseek(pFile, 0, SEEK_SET);
+
+		char buffer[1024] = "";
+		size_t rlen = 0;
+		do {
+			rlen = fread(buffer, 1, 1024, pFile);
+			CPacket pack(4, (BYTE*)buffer, rlen);
+			CServerSocket::getInstance()->Send(pack);
+		} while (rlen >= 1024);
+		fclose(pFile);
+	}
+
+	CPacket pack(4, NULL, 0);
+	CServerSocket::getInstance()->Send(pack);
+	return 1;
+}
+
 int main() {
 	int nRetCode = 0;
 
@@ -150,11 +195,18 @@ int main() {
 
 			int nCmd = 1;
 			switch (nCmd) {
-			case 1:
-				MakeDriverInfo();//查看磁盘分区
+			case 1://查看磁盘分区
+				MakeDriverInfo();
 				break;
-			case 2:
+			case 2://查看指点目录下的文件
 				MakeDirectoryInfo();
+				break;
+			case 3://打开文件
+				RunFile();
+				break;
+			case 4://下载文件
+				DownloadFile();
+				break;
 			default:
 				break;
 			}

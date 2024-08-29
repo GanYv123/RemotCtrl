@@ -99,7 +99,10 @@ BOOL CServerSocket::Send(CPacket& pack) {
 }
 
 BOOL CServerSocket::getFilePath(std::string& strPath) {
-	if (m_packet.sCmd == 2) {
+	if ((m_packet.sCmd == 2)
+		||(m_packet.sCmd == 3)
+		||(m_packet.sCmd == 4)) 
+	{
 		strPath = m_packet.strData;
 		return TRUE;
 	}
@@ -159,7 +162,8 @@ CPacket::CPacket(const CPacket& pack) {
  * @argument:
  * nSize:数据的字节大小
  */
-CPacket::CPacket(const BYTE* pData, size_t& nSize) {
+CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0), sSum(0) 
+{
 	size_t i = 0;
 	for (; i < nSize; i++) {
 		if (*(WORD*)(pData + i) == 0xFEFF) { //校验包头
@@ -206,12 +210,17 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) {
 	}
 }
 
-CPacket::CPacket(DWORD nCmd, const BYTE* pData, size_t nSize) {
+CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 	sHead = 0xFEFF;
 	nLength = nSize + 4;//数据长度 = cmd + 校验
 	sCmd = nCmd;
-	strData.resize(nSize);
-	memcpy((void*)strData.c_str(), pData, nSize);
+	if (nSize > 0) {
+		strData.resize(nSize);
+		memcpy((void*)strData.c_str(), pData, nSize);
+	}
+	else {
+		strData.clear();
+	}
 	sSum = 0;
 	for (size_t j = 0; j < strData.size(); j++) {
 		sSum += (BYTE(strData[j]) & 0xFF);

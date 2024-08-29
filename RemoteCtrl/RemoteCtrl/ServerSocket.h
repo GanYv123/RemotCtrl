@@ -12,7 +12,7 @@ public:
 	CPacket();
 	CPacket(const CPacket& packet);
 	CPacket(const BYTE* pData,size_t& nSize);
-	CPacket(DWORD nCmd,const BYTE* pData,size_t nSize);
+	CPacket(WORD nCmd,const BYTE* pData,size_t nSize);
 
 	~CPacket();
 	CPacket& operator=(const CPacket& pack);
