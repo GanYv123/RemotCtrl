@@ -109,6 +109,14 @@ BOOL CServerSocket::getFilePath(std::string& strPath) {
 	return FALSE;
 }
 
+BOOL CServerSocket::getMouseEvent(MOUSEEV& mouse) {
+	if (m_packet.sCmd == 5) {
+		memcpy(&mouse,m_packet.strData.c_str(),sizeof(MOUSEEV));
+		return TRUE;
+	}
+	return FALSE;
+}
+
 
 /**
  * @purpose:网络环境初始化

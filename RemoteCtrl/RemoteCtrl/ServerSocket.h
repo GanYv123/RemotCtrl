@@ -29,6 +29,20 @@ public:
 	std::string strOut; //整包数据
 };
 
+typedef struct MouseEvent 
+{
+	MouseEvent() {
+		nAction = 0;
+		nButton = -1;
+		ptXY.x = 0;
+		ptXY.y = 0;
+	}
+
+	WORD nAction;	//点击 移动 双击
+	WORD nButton;	//左键右键中键
+	POINT ptXY;		//坐标
+}MOUSEEV,*PMOUSEEV;
+
 
 class CServerSocket {
 public:
@@ -39,6 +53,7 @@ public:
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(CPacket& pack);
 	BOOL getFilePath(std::string& strPath);
+	BOOL getMouseEvent(MOUSEEV& mouse);
 private:
 	SOCKET m_serv_socket;
 	SOCKET m_client;
