@@ -273,12 +273,18 @@ int MouseEvent() {
 
 #include <atlimage.h>
 
+/**
+ * @todo:实现分辨率自适应
+ */
 int SendScreen() {
 	CImage screen;
 	HDC hScreen = ::GetDC(NULL);//获取屏幕句柄
 	int nBitPerpixel = GetDeviceCaps(hScreen, BITSPIXEL);//24 rgb888
 	int nWidth = GetDeviceCaps(hScreen, HORZRES);//宽度
 	int nHeight = GetDeviceCaps(hScreen, VERTRES);//高
+	/*GetDeviceCaps(hScreen, HORZRES) 和 GetDeviceCaps(hScreen, VERTRES):
+		分别获取屏幕的水平和垂直分辨率（宽度和高度，以像素为单位）。
+	*/
 	screen.Create(nWidth, nHeight, nBitPerpixel);
 	BitBlt(screen.GetDC(), 0, 0, 1920, 1020, hScreen, 0, 0, SRCCOPY);
 	ReleaseDC(NULL,hScreen);
@@ -300,6 +306,74 @@ int SendScreen() {
 	pStream->Release();
 	GlobalFree(hMem);
 	screen.ReleaseDC();
+	return 1;
+}
+
+#include "LockInfoDialog.h"
+CLockInfoDialog dlg;
+unsigned threadId = 0;
+
+unsigned int WINAPI threadLockDlg(void* arg) {
+	TRACE("%s(%d) %d\r\n",__FUNCTION__,__LINE__,GetCurrentThreadId());
+	dlg.Create(IDD_DIALOG_INFO, NULL);
+	CRect rect;
+	//rect.left = 0; rect.top = 0; rect.right = 1920; rect.bottom = 1020;
+	rect.left = 0; rect.top = 0;
+	//自适应设备显示器分辨率
+	rect.right = GetSystemMetrics(SM_CXSCREEN); rect.bottom = GetSystemMetrics(SM_CYSCREEN);
+	TRACE("right = %04d  bottom = %04d", rect.right, rect.bottom);
+
+	dlg.ShowWindow(SW_SHOWNA);
+	dlg.MoveWindow(rect);
+	dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);//置顶
+	ShowCursor(FALSE);
+	//隐藏任务栏
+	::ShowWindow(::FindWindow(_T("Shell_Traywnd"), NULL), SW_HIDE);
+	/*限制鼠标活动范围*/
+	rect.left = 0;
+	rect.right = 1;
+	rect.bottom = 1;
+	rect.top = 0;
+	ClipCursor(rect);
+
+	MSG msg;
+	while (GetMessage(&msg, NULL, 0, 0)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+		if (msg.message == WM_KEYDOWN) {
+			TRACE("msg:%08X wparam:%08X lparam:%08X\r\n", msg.message, msg.wParam, msg.lParam);
+
+			if (msg.wParam == 0x41)//按下esc退出
+				break;
+		}
+	}
+
+	ShowCursor(TRUE);
+	::ShowWindow(::FindWindow(_T("Shell_Traywnd"), NULL), SW_SHOW);
+	dlg.DestroyWindow();
+	_endthreadex(0);
+	return 0;
+}
+
+int LockMachine() {
+	if ((dlg.m_hWnd == NULL) || (dlg.m_hWnd == INVALID_HANDLE_VALUE)) {
+		//_beginthread(threadLockDlg, 0, NULL);
+		_beginthreadex(NULL,0,threadLockDlg, 0, NULL,&threadId);
+		TRACE("threadId = %d\r\n",threadId);
+		return 0;
+	}
+
+	CPacket pack(7, NULL, 0);
+	CServerSocket::getInstance()->Send(pack);
+	
+	return 0;
+}
+
+
+int UnlockMachine() {
+	//dlg.SendMessage(WM_KEYDOWN, 0x41, 0X01E0001);
+	//::SendMessage(dlg.m_hWnd,WM_KEYDOWN,0X41, 0X01E0001);//Windows消息泵只能发同一线程
+	::PostThreadMessage(threadId,WM_KEYDOWN,0x41,0);
 	return 1;
 }
 
@@ -338,8 +412,8 @@ int main() {
 			//	int ret = pserver->DealCommand();
 			//	//TODO:
 			//}
+			int nCmd = 7;
 
-			int nCmd = 6;
 			switch (nCmd) {
 			case 1://查看磁盘分区
 				MakeDriverInfo();
@@ -359,10 +433,22 @@ int main() {
 			case 6://发送屏幕内容==>发送屏幕截图
 				SendScreen();
 				break;
+			case 7://lock
+				LockMachine();
+				Sleep(500);
+				LockMachine();
+				break;
+			case 8://unlock
+				UnlockMachine();
+				break;
 			default:
 				break;
 			}
-
+			Sleep(5000);
+			UnlockMachine();
+			while (dlg.m_hWnd != NULL) {
+				Sleep(10);
+			}
 		}
 	}
 	else {
