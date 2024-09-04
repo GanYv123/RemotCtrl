@@ -50,9 +50,11 @@ BOOL CServerSocket::initSocket() {
 }
 
 BOOL CServerSocket::AcceptClient() {
+	TRACE("enter AcceptClient()\r\n");
 	SOCKADDR_IN cli_adr;
 	int cli_adr_sz = sizeof(cli_adr);
 	m_client = accept(m_serv_socket, (SOCKADDR*)&cli_adr, &cli_adr_sz);
+	TRACE("m_client = %d\r\n",m_client);
 	if (m_client == -1) {
 		return FALSE;
 	}
@@ -67,11 +69,16 @@ int CServerSocket::DealCommand() {
 	if (m_client == -1) return FALSE;
 
 	char* buffer = new char[BUFFER_SIZE];
+	if (buffer == NULL) {
+		TRACE("内存不足!\r\n");
+		return -2;
+	}
 	memset(buffer, 0, BUFFER_SIZE);
 	size_t index = 0;
 	while (TRUE) {
 		int len = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
 		if (len <= 0) {
+			delete[] buffer;
 			return -1;
 		}
 		size_t size_len = static_cast<size_t>(len);
@@ -82,9 +89,11 @@ int CServerSocket::DealCommand() {
 		if (len > 0) {
 			memmove(buffer, buffer + size_len, BUFFER_SIZE - size_len);
 			index -= size_len;
+			delete[] buffer;
 			return m_packet.sCmd;
 		}
 	}
+	delete[] buffer;
 	return -1;
 }
 
@@ -94,6 +103,8 @@ BOOL CServerSocket::Send(const char* pData, int nSize) {
 }
 
 BOOL CServerSocket::Send(CPacket& pack) {
+	TRACE("Send m_sock = %d\r\n",pack.sCmd);
+
 	if (m_client == -1) return FALSE;
 	return send(m_client, pack.Data(), pack.size(), 0) > 0;
 }
@@ -116,6 +127,10 @@ BOOL CServerSocket::getMouseEvent(MOUSEEV& mouse) {
 	}
 	return FALSE;
 }
+
+CPacket& CServerSocket::getPacket() {return m_packet;}
+
+void CServerSocket::closeClient() { closesocket(m_client); m_client = INVALID_SOCKET;};
 
 
 /**
@@ -179,43 +194,43 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0
 			i += 2;//一个WORD 2byte
 			break;
 		}
-
-		if (i + 8 > nSize) { //解析不成功 length + cmd +sum
-			nSize = 0;
-			return;/*大小不完整的包*/
-		}
-
-		nLength = *(DWORD*)(pData + i);
-		i += 4;
-		/*- - -*/
-		//此处 i = length 之前的字节数
-		if (nLength + i > nSize) { //包没完全接收到，有残缺
-			nSize = 0;
-			return;
-		}
-
-		sCmd = *(WORD*)(pData + i);
-		i += 2;
-		/*- - -*/
-		if (nLength > 4) {
-			strData.resize(nLength - 2 - 2);
-			memcpy((void*)strData.c_str(), pData + i, nLength - 4);
-			i += nLength - 4;
-		}
-		/*- - -*/
-		sSum = *(WORD*)(pData + i);
-		i += 2;
-		WORD sum = 0;
-		for (size_t j = 0; j < strData.size(); j++) {
-			sum += (BYTE(strData[j]) & 0xFF);
-		}
-		if (sum == sSum) {//解析成功
-			nSize = i;
-			return;
-			//FFFE 0900 0000 0100 432C442C46 2501
-		}
-		nSize = 0;
 	}
+	if (i + 8 > nSize) { //解析不成功 length + cmd +sum
+		nSize = 0;
+		return;/*大小不完整的包*/
+	}
+
+	nLength = *(DWORD*)(pData + i);
+	i += 4;
+	/*- - -*/
+	//此处 i = length 之前的字节数
+	if (nLength + i > nSize) { //包没完全接收到，有残缺
+		nSize = 0;
+		return;
+	}
+
+	sCmd = *(WORD*)(pData + i);
+	i += 2;
+	/*- - -*/
+	if (nLength > 4) {
+		strData.resize(nLength - 2 - 2);
+		memcpy((void*)strData.c_str(), pData + i, nLength - 4);
+		i += nLength - 4;
+	}
+	/*- - -*/
+	sSum = *(WORD*)(pData + i);
+	i += 2;
+	WORD sum = 0;
+	for (size_t j = 0; j < strData.size(); j++) {
+		sum += (BYTE(strData[j]) & 0xFF);
+	}
+	if (sum == sSum) {//解析成功
+		nSize = i;
+		return;
+		//FFFE 0900 0000 0100 432C442C46 2501
+	}
+	nSize = 0;
+	
 }
 
 CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {

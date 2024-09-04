@@ -55,6 +55,8 @@ public:
 	BOOL Send(CPacket& pack);
 	BOOL getFilePath(std::string& strPath);
 	BOOL getMouseEvent(MOUSEEV& mouse);
+	CPacket& getPacket();
+	void closeClient();
 private:
 	SOCKET m_serv_socket;
 	SOCKET m_client;

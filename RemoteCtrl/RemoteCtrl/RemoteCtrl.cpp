@@ -152,7 +152,7 @@ int DownloadFile() {
 
 	CPacket pack(4, NULL, 0);
 	CServerSocket::getInstance()->Send(pack);
-	return 1;
+	return 0;
 }
 
 int MouseEvent() {
@@ -265,10 +265,10 @@ int MouseEvent() {
 	}
 	else {
 		OutputDebugString(_T("获取鼠标操作参数失败！"));
-		return 0;
+		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 #include <atlimage.h>
@@ -306,7 +306,7 @@ int SendScreen() {
 	pStream->Release();
 	GlobalFree(hMem);
 	screen.ReleaseDC();
-	return 1;
+	return 0;
 }
 
 #include "LockInfoDialog.h"
@@ -360,7 +360,6 @@ int LockMachine() {
 		//_beginthread(threadLockDlg, 0, NULL);
 		_beginthreadex(NULL,0,threadLockDlg, 0, NULL,&threadId);
 		TRACE("threadId = %d\r\n",threadId);
-		return 0;
 	}
 
 	CPacket pack(7, NULL, 0);
@@ -374,7 +373,51 @@ int UnlockMachine() {
 	//dlg.SendMessage(WM_KEYDOWN, 0x41, 0X01E0001);
 	//::SendMessage(dlg.m_hWnd,WM_KEYDOWN,0X41, 0X01E0001);//Windows消息泵只能发同一线程
 	::PostThreadMessage(threadId,WM_KEYDOWN,0x41,0);
-	return 1;
+	return 0;
+}
+
+int TestConnect() {
+	CPacket pack(22233, NULL, 0);
+	CServerSocket::getInstance()->Send(pack);
+	return 0;
+}
+
+int ExcuteCommand(int nCmd) {
+	int ret{ -1 };
+	//全局的静态变量
+	switch (nCmd) {
+	case 1://查看磁盘分区
+		ret = MakeDriverInfo();
+		break;
+	case 2://查看指点目录下的文件
+		ret = MakeDirectoryInfo();
+		break;
+	case 3://打开文件
+		ret = RunFile();
+		break;
+	case 4://下载文件
+		ret = DownloadFile();
+		break;
+	case 5://鼠标操作
+		ret = MouseEvent();
+		break;
+	case 6://发送屏幕内容==>发送屏幕截图
+		ret = SendScreen();
+		break;
+	case 7://lock
+		ret = LockMachine();
+		break;
+	case 8://unlock
+		ret = UnlockMachine();
+		break;
+	case 22233://测试连接
+		ret = TestConnect();
+		break;
+	default:
+		ret = -2;
+		break;
+	}
+	return ret;
 }
 
 int main() {
@@ -390,65 +433,37 @@ int main() {
 			nRetCode = 1;
 		}
 		else {
-			//CServerSocket* pserver = CServerSocket::getInstance();
-			//int count = 0;
-			//
-			//if (pserver->initSocket() == FALSE) {
-			//	MessageBox(NULL, _T("网络初始化异常，请检查网络状态!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
-			//	exit(0);
-			//}
-			//
-			//while (CServerSocket::getInstance() != nullptr) {
-			//	if (pserver->AcceptClient() == FALSE) {
-			//		if (count >= 3) {
-			//			MessageBox(NULL, _T("多次接入用户失败，结束程序!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
-			//			exit(0);
-			//
-			//		}
-			//		MessageBox(NULL, _T("接入用户失败,无法正常接入用户自动重试!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
-			//		count++;
-			//	}
-			//	/*接收不同的命令 处理不同的响应*/
-			//	int ret = pserver->DealCommand();
-			//	//TODO:
-			//}
-			int nCmd = 7;
 
-			switch (nCmd) {
-			case 1://查看磁盘分区
-				MakeDriverInfo();
-				break;
-			case 2://查看指点目录下的文件
-				MakeDirectoryInfo();
-				break;
-			case 3://打开文件
-				RunFile();
-				break;
-			case 4://下载文件
-				DownloadFile();
-				break;
-			case 5://鼠标操作
-				MouseEvent();
-				break;
-			case 6://发送屏幕内容==>发送屏幕截图
-				SendScreen();
-				break;
-			case 7://lock
-				LockMachine();
-				Sleep(500);
-				LockMachine();
-				break;
-			case 8://unlock
-				UnlockMachine();
-				break;
-			default:
-				break;
+			CServerSocket* pserver = CServerSocket::getInstance();
+			int count = 0;
+			if (pserver->initSocket() == FALSE) {
+				MessageBox(NULL, _T("网络初始化异常，请检查网络状态!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
+				exit(0);
 			}
-			Sleep(5000);
-			UnlockMachine();
-			while (dlg.m_hWnd != NULL) {
-				Sleep(10);
+			
+			while (CServerSocket::getInstance() != nullptr) {
+				if (pserver->AcceptClient() == FALSE) {
+					if (count >= 3) {
+						MessageBox(NULL, _T("多次接入用户失败，结束程序!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
+						exit(0);
+					}
+					MessageBox(NULL, _T("接入用户失败,无法正常接入用户自动重试!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
+					count++;
+				}
+				/*接收不同的命令 处理不同的响应*/
+				int ret = pserver->DealCommand();
+				TRACE("DealCommand ret = %d\r\n",ret);
+				if (ret > 0) {
+					ret = ExcuteCommand(pserver->getPacket().sCmd);
+					if (ret != 0) {
+						TRACE("执行命令失败!%d ret = %d\r\n",pserver->getPacket().sCmd,ret);
+					}
+					pserver->closeClient();
+					TRACE("Command has done!\r\n");
+				}
+
 			}
+
 		}
 	}
 	else {

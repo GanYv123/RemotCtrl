@@ -3,6 +3,7 @@
 #include "pch.h"
 #include "framework.h"
 #include <string>
+#include <vector>
 
 /* 用于数据的 包、帧 */
 #pragma pack(push)
@@ -54,9 +55,12 @@ public:
 	BOOL Send(CPacket& pack);
 	BOOL getFilePath(std::string& strPath);
 	BOOL getMouseEvent(MOUSEEV& mouse);
+	CPacket& getPacket();
+	void CloseSocket();
 private:
 	SOCKET m_sock;
 	CPacket m_packet;
+	std::vector<char> m_buffer;
 	//
 	CClientSocket();
 	CClientSocket(const CClientSocket&);

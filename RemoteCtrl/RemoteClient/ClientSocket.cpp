@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ClientSocket.h"
+#define BUFFER_SIZE 4096
 
 CClientSocket::CClientSocket() {
 	m_sock = INVALID_SOCKET;
@@ -7,7 +8,7 @@ CClientSocket::CClientSocket() {
 		MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置"), _T("初始化套接字错误"), MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	m_sock = socket(PF_INET, SOCK_STREAM, 0);
+	m_buffer.resize(BUFFER_SIZE);
 }
 
 CClientSocket::CClientSocket(const CClientSocket& ss) {
@@ -29,28 +30,39 @@ CClientSocket* CClientSocket::getInstance() {
 
 std::string GetErrorInfo(int wsaErrCode) {
 	std::string ret;
+	// 检查错误码是否为 0
+	if (wsaErrCode == 0) {
+		return "No error.";
+	}
 	LPVOID lpMsgBuf = NULL;
 	FormatMessage(
-		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		NULL,
-		wsaErrCode,
-		MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf,0,NULL
-	);
-	ret = (char*)lpMsgBuf;
-	LocalFree(lpMsgBuf);
-
+		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,wsaErrCode,MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf,0,NULL);
+	if (lpMsgBuf) {
+		ret = (char*)lpMsgBuf;
+		LocalFree(lpMsgBuf);
+	}
+	else {
+		ret = "Unknown error.";
+	}
 	return ret;
 }
 
+
 BOOL CClientSocket::initSocket(const std::string strIPAddress) {
-	// TODO: 1.socket bind listen accept read/write close;
+	if (m_sock != INVALID_SOCKET) CloseSocket();
+	m_sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (m_sock == -1) { return FALSE; }
 	SOCKADDR_IN serv_adr;
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family = AF_INET;
+
+	#pragma warning(push)
 	#pragma warning(suppress : 4996) //inet_addr
 	serv_adr.sin_addr.S_un.S_addr = inet_addr(strIPAddress.c_str());
+	#pragma warning(pop) // 当离开这个区域时，恢复之前的警告级别
+
 	serv_adr.sin_port = htons(2323);
 	if (serv_adr.sin_addr.s_addr == INADDR_NONE) {
 		AfxMessageBox(_T("指定的IP地址不存在!"));
@@ -63,16 +75,14 @@ BOOL CClientSocket::initSocket(const std::string strIPAddress) {
 		TRACE("连接失败: %d %s\r\n",WSAGetLastError(),GetErrorInfo(WSAGetLastError()).c_str());
 		return FALSE;
 	}
-
 	return TRUE;
 
 }
 /** 处理命令 */
-#define BUFFER_SIZE 4096
 int CClientSocket::DealCommand() {
 	if (m_sock == -1) return FALSE;
 
-	char* buffer = new char[BUFFER_SIZE];
+	char* buffer = m_buffer.data();
 	memset(buffer, 0, BUFFER_SIZE);
 	size_t index = 0;
 	while (TRUE) {
@@ -122,6 +132,9 @@ BOOL CClientSocket::getMouseEvent(MOUSEEV& mouse) {
 	return FALSE;
 }
 
+CPacket& CClientSocket::getPacket() { return m_packet; }
+
+void CClientSocket::CloseSocket() { closesocket(m_sock); m_sock = INVALID_SOCKET;}
 
 /**
  * @purpose:网络环境初始化
@@ -183,43 +196,42 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0
 			i += 2;//一个WORD 2byte
 			break;
 		}
-
-		if (i + 8 > nSize) { //解析不成功 length + cmd +sum
-			nSize = 0;
-			return;/*大小不完整的包*/
-		}
-
-		nLength = *(DWORD*)(pData + i);
-		i += 4;
-		/*- - -*/
-		//此处 i = length 之前的字节数
-		if (nLength + i > nSize) { //包没完全接收到，有残缺
-			nSize = 0;
-			return;
-		}
-
-		sCmd = *(WORD*)(pData + i);
-		i += 2;
-		/*- - -*/
-		if (nLength > 4) {
-			strData.resize(nLength - 2 - 2);
-			memcpy((void*)strData.c_str(), pData + i, nLength - 4);
-			i += nLength - 4;
-		}
-		/*- - -*/
-		sSum = *(WORD*)(pData + i);
-		i += 2;
-		WORD sum = 0;
-		for (size_t j = 0; j < strData.size(); j++) {
-			sum += (BYTE(strData[j]) & 0xFF);
-		}
-		if (sum == sSum) {//解析成功
-			nSize = i;
-			return;
-			//FFFE 0900 0000 0100 432C442C46 2501
-		}
-		nSize = 0;
 	}
+	if (i + 8 > nSize) { //解析不成功 length + cmd +sum
+		nSize = 0;
+		return;/*大小不完整的包*/
+	}
+
+	nLength = *(DWORD*)(pData + i);
+	i += 4;
+	/*- - -*/
+	//此处 i = length 之前的字节数
+	if (nLength + i > nSize) { //包没完全接收到，有残缺
+		nSize = 0;
+		return;
+	}
+
+	sCmd = *(WORD*)(pData + i);
+	i += 2;
+	/*- - -*/
+	if (nLength > 4) {
+		strData.resize(nLength - 2 - 2);
+		memcpy((void*)strData.c_str(), pData + i, nLength - 4);
+		i += nLength - 4;
+	}
+	/*- - -*/
+	sSum = *(WORD*)(pData + i);
+	i += 2;
+	WORD sum = 0;
+	for (size_t j = 0; j < strData.size(); j++) {
+		sum += (BYTE(strData[j]) & 0xFF);
+	}
+	if (sum == sSum) {//解析成功
+		nSize = i;
+		return;
+		//FFFE 0900 0000 0100 432C442C46 2501
+	}
+	nSize = 0;
 }
 
 CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
