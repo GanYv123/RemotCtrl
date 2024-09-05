@@ -34,15 +34,15 @@ int MakeDriverInfo() {//1==>A 2==>B ...
 	std::string result;
 	for (int i = 1; i <= 26; i++) { //改变当前驱动
 		if (_chdrive(i) == 0) {
+			result += 'A' + i - 1; //C,D,F,
 			if (result.size()) {
 				result += ',';
 			}
-			result += 'A' + i - 1;
 		}
 	}
 	CPacket pack(1, (BYTE*)result.c_str(), result.size());
 	Dump((BYTE*)pack.Data(), pack.size());
-	//CServerSocket::getInstance()->Send(pack);
+	CServerSocket::getInstance()->Send(pack);
 	return 0;
 }
 

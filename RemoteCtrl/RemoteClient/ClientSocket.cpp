@@ -50,20 +50,21 @@ std::string GetErrorInfo(int wsaErrCode) {
 }
 
 
-BOOL CClientSocket::initSocket(const std::string strIPAddress) {
+BOOL CClientSocket::initSocket(int nIP,int nPort) {
 	if (m_sock != INVALID_SOCKET) CloseSocket();
 	m_sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (m_sock == -1) { return FALSE; }
 	SOCKADDR_IN serv_adr;
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family = AF_INET;
+	serv_adr.sin_addr.S_un.S_addr = htonl(nIP);
+	serv_adr.sin_port = htons(nPort);
+	//#pragma warning(push)
+	//#pragma warning(suppress : 4996) //inet_addr
+	//	serv_adr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");//0x0100007f
+	//#pragma warning(pop) // 当离开这个区域时，恢复之前的警告级别
+	//	serv_adr.sin_port = htons(2323);//0x1309
 
-	#pragma warning(push)
-	#pragma warning(suppress : 4996) //inet_addr
-	serv_adr.sin_addr.S_un.S_addr = inet_addr(strIPAddress.c_str());
-	#pragma warning(pop) // 当离开这个区域时，恢复之前的警告级别
-
-	serv_adr.sin_port = htons(2323);
 	if (serv_adr.sin_addr.s_addr == INADDR_NONE) {
 		AfxMessageBox(_T("指定的IP地址不存在!"));
 		return FALSE;

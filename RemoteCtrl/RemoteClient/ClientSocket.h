@@ -49,7 +49,7 @@ typedef struct MouseEvent {
 class CClientSocket {
 public:
 	static CClientSocket* getInstance();
-	BOOL initSocket(const std::string strIPAddress);
+	BOOL initSocket(int nIP, int nPort);
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(CPacket& pack);
