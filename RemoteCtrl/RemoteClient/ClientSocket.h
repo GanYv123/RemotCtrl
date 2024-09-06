@@ -32,6 +32,20 @@ public:
 };
 #pragma pack(pop)
 
+typedef struct file_info {
+	file_info() {
+		IsInvalid = FALSE;
+		IsDirectory = -1;
+		HasNext = TRUE;
+		memset(szFileName, 0, sizeof(szFileName));
+	}
+	BOOL IsInvalid;  //是否为失效文件
+	BOOL IsDirectory;//是否为目录
+	BOOL HasNext;	 //是否还有后续文件
+	char szFileName[256];
+
+}FILEINFO, * PFILEINFO;
+
 typedef struct MouseEvent {
 	MouseEvent() {
 		nAction = 0;

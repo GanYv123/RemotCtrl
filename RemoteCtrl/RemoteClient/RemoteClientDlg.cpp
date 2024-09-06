@@ -15,30 +15,27 @@
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
-class CAboutDlg : public CDialogEx
-{
+class CAboutDlg : public CDialogEx {
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
-// 实现
+	// 实现
 protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
+CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX) {
 }
 
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
+void CAboutDlg::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 }
 
@@ -56,15 +53,14 @@ CRemoteClientDlg::CRemoteClientDlg(CWnd* pParent /*=nullptr*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
-void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX)
-{
+void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX) {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_IPAddress(pDX, IDC_IPADDRESS_SERV, m_server_address);
 	DDX_Text(pDX, IDC_EDIT_PORT, m_nPort);
 	DDX_Control(pDX, IDC_TREE_DIR, m_Tree);
 }
 
-int CRemoteClientDlg::sendCommandPacket(int nCmd, BYTE* pData, size_t nLength) {
+int CRemoteClientDlg::sendCommandPacket(int nCmd, BOOL bAutoClose, BYTE* pData, size_t nLength) {
 	UpdateData();
 	CClientSocket* pClient = CClientSocket::getInstance();
 	BOOL ret = pClient->initSocket(m_server_address, _ttoi(m_nPort));
@@ -77,7 +73,8 @@ int CRemoteClientDlg::sendCommandPacket(int nCmd, BYTE* pData, size_t nLength) {
 	TRACE("Send ret: %d\r\n", ret);
 	int cmd = pClient->DealCommand();
 	TRACE("ack:%d\r\n", cmd);
-	pClient->CloseSocket();
+	if(bAutoClose)
+		pClient->CloseSocket();
 	return cmd;
 }
 
@@ -87,13 +84,13 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BTN_TEST, &CRemoteClientDlg::OnBnClickedBtnTest)
 	ON_BN_CLICKED(IDC_BTN_FILEINFO, &CRemoteClientDlg::OnBnClickedBtnFileinfo)
+	ON_NOTIFY(NM_DBLCLK, IDC_TREE_DIR, &CRemoteClientDlg::OnNMDblclkTreeDir)
 END_MESSAGE_MAP()
 
 
 // CRemoteClientDlg 消息处理程序
 
-BOOL CRemoteClientDlg::OnInitDialog()
-{
+BOOL CRemoteClientDlg::OnInitDialog() {
 	CDialogEx::OnInitDialog();
 
 	// 将“关于...”菜单项添加到系统菜单中。
@@ -103,14 +100,12 @@ BOOL CRemoteClientDlg::OnInitDialog()
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != nullptr)
-	{
+	if (pSysMenu != nullptr) {
 		BOOL bNameValid;
 		CString strAboutMenu;
 		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
 		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty())
-		{
+		if (!strAboutMenu.IsEmpty()) {
 			pSysMenu->AppendMenu(MF_SEPARATOR);
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
@@ -130,15 +125,12 @@ BOOL CRemoteClientDlg::OnInitDialog()
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
-void CRemoteClientDlg::OnSysCommand(UINT nID, LPARAM lParam)
-{
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
+void CRemoteClientDlg::OnSysCommand(UINT nID, LPARAM lParam) {
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX) {
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
 	}
-	else
-	{
+	else {
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
 }
@@ -147,10 +139,8 @@ void CRemoteClientDlg::OnSysCommand(UINT nID, LPARAM lParam)
 //  来绘制该图标。  对于使用文档/视图模型的 MFC 应用程序，
 //  这将由框架自动完成。
 
-void CRemoteClientDlg::OnPaint()
-{
-	if (IsIconic())
-	{
+void CRemoteClientDlg::OnPaint() {
+	if (IsIconic()) {
 		CPaintDC dc(this); // 用于绘制的设备上下文
 
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
@@ -166,16 +156,14 @@ void CRemoteClientDlg::OnPaint()
 		// 绘制图标
 		dc.DrawIcon(x, y, m_hIcon);
 	}
-	else
-	{
+	else {
 		CDialogEx::OnPaint();
 	}
 }
 
 //当用户拖动最小化窗口时系统调用此函数取得光标
 //显示。
-HCURSOR CRemoteClientDlg::OnQueryDragIcon()
-{
+HCURSOR CRemoteClientDlg::OnQueryDragIcon() {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
@@ -194,16 +182,101 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
 	std::string drivers = pClient->getPacket().strData;
 	std::string dr;
 	m_Tree.DeleteAllItems();
-	for (size_t i = 0;i < drivers.size();i++)//C,D,F
+	for (size_t i = 0; i < drivers.size(); i++)//C,D,F
 	{
 		if (drivers[i] == ',') {
 			dr += ":";
-			CString cstrDr(dr.c_str());
-			m_Tree.InsertItem(cstrDr,TVI_ROOT,TVI_LAST);
+			{
+				CString cstrDr(dr.c_str());
+				HTREEITEM hTemp = m_Tree.InsertItem(cstrDr, TVI_ROOT, TVI_LAST);
+				m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
+			}
 			dr.clear();
 			continue;
 		}
 		dr += drivers[i];
 	}
 
+}
+
+CString  CRemoteClientDlg::GetPath(HTREEITEM hTree) {
+	CString strRet,strTmp;
+	do {
+		strTmp = m_Tree.GetItemText(hTree);
+		strRet = strTmp + '\\' + strRet;
+		hTree = m_Tree.GetParentItem(hTree);
+
+	} while (hTree != NULL);
+
+	if (!strRet.IsEmpty() && strRet[strRet.GetLength() - 1] == '\\') {
+		strRet = strRet.Left(strRet.GetLength() - 1); // 去除末尾的分隔符
+	}
+
+	return strRet;
+}
+
+void CRemoteClientDlg::DeleteTreeChildrenItem(HTREEITEM hTree) {
+	HTREEITEM hSub = NULL;
+	do 
+	{
+		hSub = m_Tree.GetChildItem(hTree);
+		if(hSub != NULL)
+			m_Tree.DeleteItem(hSub);
+	} while (hSub != NULL);
+
+}
+
+
+void CRemoteClientDlg::OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult) {
+	// TODO: 在此添加控件通知处理程序代码
+	*pResult = 0;
+
+	CPoint ptMouse;
+	GetCursorPos(&ptMouse);
+	m_Tree.ScreenToClient(&ptMouse);
+	HTREEITEM hTreeSelected = m_Tree.HitTest(ptMouse, 0);
+	if (hTreeSelected == NULL) 
+		return;
+	if (m_Tree.GetChildItem(hTreeSelected) == NULL) 
+		return;
+	DeleteTreeChildrenItem(hTreeSelected);
+	CString strPath = GetPath(hTreeSelected);
+
+#ifdef _UNICODE
+	CStringA strPathA(strPath);
+	int nCmd = sendCommandPacket(2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength());
+#else
+	int nCmd = sendCommandPacket(2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
+#endif //#ifdef _UNICODE
+
+	PFILEINFO pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
+	CClientSocket* pClient = CClientSocket::getInstance();
+	while (pInfo->HasNext) {
+		TRACE("OnNMDblclkTreeDir(): %s isDir:%s\r\n",
+			pInfo->szFileName,pInfo->IsDirectory == 0 ? "true":"false");
+		if (pInfo->IsDirectory) {
+			if (CString(pInfo->szFileName) == "." || CString(pInfo->szFileName) == "..") {
+				int cmd = pClient->DealCommand();
+				TRACE("ack:%d\r\n", cmd);
+				if (cmd < 0) break;
+				pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
+				continue;
+			}
+		}
+
+		{
+			CString strFileName(pInfo->szFileName);
+			HTREEITEM hTemp = m_Tree.InsertItem(strFileName, hTreeSelected, TVI_LAST);
+			if (pInfo->IsDirectory) {
+				m_Tree.InsertItem(_T(""), hTemp, TVI_LAST);
+			}
+		}
+
+		int cmd = pClient->DealCommand();
+		TRACE("ack:%d\r\n", cmd);
+		if (cmd < 0) break;
+		pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
+	}
+
+	pClient->CloseSocket();
 }

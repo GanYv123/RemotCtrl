@@ -237,11 +237,11 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0
 
 CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 	sHead = 0xFEFF;
-	nLength = nSize + 4;//数据长度 = cmd + 校验
+	nLength = unsigned(nSize + 4);//数据长度 = cmd + 校验
 	sCmd = nCmd;
 	if (nSize > 0) {
 		strData.resize(nSize);
-		memcpy((void*)strData.c_str(), pData, nSize);
+		memcpy(&strData[0], pData, nSize);
 	}
 	else {
 		strData.clear();

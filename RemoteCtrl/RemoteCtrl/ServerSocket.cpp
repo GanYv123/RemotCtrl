@@ -104,7 +104,6 @@ BOOL CServerSocket::Send(const char* pData, int nSize) {
 
 BOOL CServerSocket::Send(CPacket& pack) {
 	TRACE("Send m_sock = %d\r\n",pack.sCmd);
-
 	if (m_client == -1) return FALSE;
 	return send(m_client, pack.Data(), pack.size(), 0) > 0;
 }

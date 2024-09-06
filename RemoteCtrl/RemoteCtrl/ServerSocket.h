@@ -6,6 +6,22 @@
 /* 用于数据的 包、帧 */
 #pragma pack(push)
 #pragma pack(1)
+
+typedef struct file_info {
+	file_info() {
+		IsInvalid = FALSE;
+		IsDirectory = -1;
+		HasNext = TRUE;
+		memset(szFileName, 0, sizeof(szFileName));
+	}
+	BOOL IsInvalid;  //是否为失效文件
+	BOOL IsDirectory;//是否为目录
+	BOOL HasNext;	 //是否还有后续文件
+	char szFileName[256];
+
+}FILEINFO, * PFILEINFO;
+
+
 class CPacket {
 public:
 	/*函数*/

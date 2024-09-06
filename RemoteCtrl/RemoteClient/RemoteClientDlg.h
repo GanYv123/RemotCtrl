@@ -6,25 +6,32 @@
 #include "ClientSocket.h"
 
 // CRemoteClientDlg 对话框
-class CRemoteClientDlg : public CDialogEx
-{
-// 构造
+class CRemoteClientDlg : public CDialogEx {
+	// 构造
 public:
 	CRemoteClientDlg(CWnd* pParent = nullptr);	// 标准构造函数
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_REMOTECLIENT_DIALOG };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 
 
 private:
-	int sendCommandPacket(int nCmd,BYTE* pData = NULL,size_t nLength = 0);
-
-// 实现
+	CString GetPath(HTREEITEM hTree);
+	void DeleteTreeChildrenItem(HTREEITEM);
+	/**
+ * 1.查看磁盘分区
+ * 2.查看指定目录文件
+ * 3.打开文件
+ * 4.下载文件
+ * 返回值是命令号
+ */
+	int sendCommandPacket(int nCmd, BOOL bAutoClose = TRUE, BYTE* pData = NULL, size_t nLength = 0);
+	// 实现
 protected:
 	HICON m_hIcon;
 
@@ -40,4 +47,5 @@ public:
 	CString m_nPort;
 	afx_msg void OnBnClickedBtnFileinfo();
 	CTreeCtrl m_Tree;
+	afx_msg void OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
 };
