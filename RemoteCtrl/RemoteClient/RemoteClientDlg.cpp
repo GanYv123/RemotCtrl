@@ -74,7 +74,7 @@ int CRemoteClientDlg::sendCommandPacket(int nCmd, BOOL bAutoClose, BYTE* pData, 
 	TRACE("Send ret: %d\r\n", ret);
 	int cmd = pClient->DealCommand();
 	TRACE("ack:%d\r\n", cmd);
-	if(bAutoClose)
+	if (bAutoClose)
 		pClient->CloseSocket();
 	return cmd;
 }
@@ -88,6 +88,9 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_TREE_DIR, &CRemoteClientDlg::OnNMDblclkTreeDir)
 	ON_NOTIFY(NM_CLICK, IDC_TREE_DIR, &CRemoteClientDlg::OnNMClickTreeDir)
 	ON_NOTIFY(NM_RCLICK, IDC_LIST_FILE, &CRemoteClientDlg::OnNMRClickListFile)
+	ON_COMMAND(ID_DOWNLOAD_FILE, &CRemoteClientDlg::OnDownloadFile)
+	ON_COMMAND(ID_DELETE_FILE, &CRemoteClientDlg::OnDeleteFile)
+	ON_COMMAND(ID_RUN_FILE, &CRemoteClientDlg::OnRunFile)
 END_MESSAGE_MAP()
 
 
@@ -203,7 +206,7 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
 }
 
 CString  CRemoteClientDlg::GetPath(HTREEITEM hTree) {
-	CString strRet,strTmp;
+	CString strRet, strTmp;
 	do {
 		strTmp = m_Tree.GetItemText(hTree);
 		strRet = strTmp + '\\' + strRet;
@@ -211,19 +214,18 @@ CString  CRemoteClientDlg::GetPath(HTREEITEM hTree) {
 
 	} while (hTree != NULL);
 
-// 	if (!strRet.IsEmpty() && strRet[strRet.GetLength() - 1] == '\\') {
-// 		strRet = strRet.Left(strRet.GetLength() - 1); // 去除末尾的分隔符
-// 	}
+	// 	if (!strRet.IsEmpty() && strRet[strRet.GetLength() - 1] == '\\') {
+	// 		strRet = strRet.Left(strRet.GetLength() - 1); // 去除末尾的分隔符
+	// 	}
 
 	return strRet;
 }
 
 void CRemoteClientDlg::DeleteTreeChildrenItem(HTREEITEM hTree) {
 	HTREEITEM hSub = NULL;
-	do 
-	{
+	do {
 		hSub = m_Tree.GetChildItem(hTree);
-		if(hSub != NULL)
+		if (hSub != NULL)
 			m_Tree.DeleteItem(hSub);
 	} while (hSub != NULL);
 
@@ -302,16 +304,84 @@ void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult) {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
 	*pResult = 0;
-	CPoint ptMouse,ptList;
+	CPoint ptMouse, ptList;
 	GetCursorPos(&ptMouse);
 	ptList = ptMouse;
 	m_List.ScreenToClient(&ptList);
-	int listSelected =  m_List.HitTest(ptList);
+	int listSelected = m_List.HitTest(ptList);
 	if (listSelected < 0) return;
 	CMenu menu;
 	menu.LoadMenu(IDR_MENU_RCLICK);
 	CMenu* pPupup = menu.GetSubMenu(0);
 	if (pPupup != NULL) {
-		pPupup->TrackPopupMenu(TPM_LEFTALIGN|TPM_RIGHTBUTTON,ptMouse.x,ptMouse.y,this);
+		pPupup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, ptMouse.x, ptMouse.y, this);
 	}
+}
+
+void CRemoteClientDlg::OnDownloadFile() {
+	// TODO: 下载文件
+	int nListSelected = m_List.GetSelectionMark();
+	CString strFile = m_List.GetItemText(nListSelected, 0);
+	CFileDialog dlg(FALSE, _T("*"),strFile,OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, NULL, this);
+	
+	if (dlg.DoModal() == IDOK) {
+		FILE* pFile{ nullptr };
+		errno_t err;
+#ifdef _UNICODE
+		CStringA pFileA(dlg.GetPathName());
+		err = fopen_s(&pFile, pFileA, "wb+");
+#else
+		err = fopen_s(&pFile, dlg.GetPathName(), "wb+");
+#endif// _UNICODE
+		if (err != 0) {
+			AfxMessageBox(_T("本地无权限，文件无法创建!"));
+			return;
+		}
+		HTREEITEM hSelected = m_Tree.GetSelectedItem();
+		strFile = GetPath(hSelected) + strFile;
+		TRACE("%s\r\n", strFile);
+		int ret{ -1 };
+#ifdef _UNICODE
+		CStringA strFileA(strFile);
+		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+#else
+		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
+#endif // _UNICODE
+		if (ret < 0) {
+			AfxMessageBox(_T("执行下载命令失败!!！"));
+			TRACE("执行下载失败:ret = %d\r\n", ret);
+			return;
+		}
+		CClientSocket* pClient = CClientSocket::getInstance();
+		long long nLength = *(long long*)pClient->getPacket().strData.c_str();
+		if (nLength == 0) {
+			AfxMessageBox(_T("文件长度为0，无法读取文件!"));
+			return;
+		}
+		long long nCount = 0;
+
+		while (nCount < nLength) {
+			pClient->DealCommand();
+			if (ret < 0) {
+				AfxMessageBox(_T("传输失败"));
+				TRACE("传输失败:ret = %d\r\n", ret);
+				break;
+			}
+			pClient->getPacket().strData.c_str();
+			fwrite(pClient->getPacket().strData.c_str(), 1, pClient->getPacket().strData.size(), pFile);
+			nCount += pClient->getPacket().strData.size();
+		}
+		fclose(pFile);
+		pClient->CloseSocket();
+	}
+}
+
+
+void CRemoteClientDlg::OnDeleteFile() {
+	// TODO: 删除文件
+}
+
+
+void CRemoteClientDlg::OnRunFile() {
+	// TODO: 运行文件
 }

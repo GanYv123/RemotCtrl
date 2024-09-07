@@ -111,8 +111,8 @@ int DownloadFile() {
 	CServerSocket::getInstance()->getFilePath(strPath);
 	FILE* pFile = nullptr;
 	errno_t err = fopen_s(&pFile, strPath.c_str(), "rb");
-
 	long long data = 0;
+
 	if (err != 0) {
 		CPacket pack(4, (BYTE*)&data, sizeof(long long));
 		CServerSocket::getInstance()->Send(pack);
@@ -124,7 +124,7 @@ int DownloadFile() {
 		fseek(pFile, 0, SEEK_END);
 		data = _ftelli64(pFile);
 		CPacket head(4, (BYTE*)&data, sizeof(long long));
-		//CServerSocket::getInstance()->Send(head);
+		CServerSocket::getInstance()->Send(head);
 		fseek(pFile, 0, SEEK_SET);
 
 		char buffer[1024] = "";
@@ -323,6 +323,7 @@ unsigned int WINAPI threadLockDlg(void* arg) {
 	rect.top = 0;
 	ClipCursor(rect);
 
+	/**用一个消息循环来屏蔽其他键盘按键*/
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
