@@ -9,6 +9,8 @@ CClientSocket::CClientSocket() {
 		exit(0);
 	}
 	m_buffer.resize(BUFFER_SIZE);
+	memset(m_buffer.data(), 0, BUFFER_SIZE);
+
 }
 
 CClientSocket::CClientSocket(const CClientSocket& ss) {
@@ -79,26 +81,35 @@ BOOL CClientSocket::initSocket(int nIP,int nPort) {
 	return TRUE;
 
 }
+
+void CClientSocket::Dump(BYTE* pData, size_t nSize) {
+	std::string strOut;
+	for (size_t i = 0; i < nSize; i++) {
+		char buf[8] = "";
+		if (i > 0 && (i % 16 == 0)) strOut += "\n ";
+		snprintf(buf, sizeof(buf), "%02X", pData[i] & 0xFF);
+		strOut += buf;
+	}
+	strOut += "\n";
+	OutputDebugStringA(strOut.c_str());
+}
 /** ¥¶¿Ì√¸¡Ó */
 int CClientSocket::DealCommand() {
 	if (m_sock == -1) return FALSE;
-
 	char* buffer = m_buffer.data();
-	memset(buffer, 0, BUFFER_SIZE);
-	size_t index = 0;
+	static size_t index = 0;
 	while (TRUE) {
-		int len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);
-		if (len <= 0) {
+		size_t len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);
+		if ((len <= 0)&&(index==0)) {
 			return -1;
 		}
-		size_t size_len = static_cast<size_t>(len);
-		index += size_len;
-		size_len = index;
-
-		m_packet = CPacket((BYTE*)buffer, size_len);
+		//Dump((BYTE*)buffer, index);
+		index += len;
+		len = index;
+		m_packet = CPacket((BYTE*)buffer, len);
 		if (len > 0) {
-			memmove(buffer, buffer + size_len, BUFFER_SIZE - size_len);
-			index -= size_len;
+			memmove(buffer, buffer + len, index - len);
+			index -= len;
 			return m_packet.sCmd;
 		}
 	}
@@ -218,6 +229,7 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0
 	if (nLength > 4) {
 		strData.resize(nLength - 2 - 2);
 		memcpy((void*)strData.c_str(), pData + i, nLength - 4);
+		TRACE("%s\r\n",strData.c_str()+12);
 		i += nLength - 4;
 	}
 	/*- - -*/

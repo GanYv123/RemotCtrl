@@ -64,6 +64,7 @@ class CClientSocket {
 public:
 	static CClientSocket* getInstance();
 	BOOL initSocket(int nIP, int nPort);
+	void Dump(BYTE* pData, size_t nSize);
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(CPacket& pack);

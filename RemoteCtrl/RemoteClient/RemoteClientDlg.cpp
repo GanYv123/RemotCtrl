@@ -225,7 +225,6 @@ void CRemoteClientDlg::LoadFileCurrent() {
 			CString strFormatted(pInfo->szFileName);
 			m_List.InsertItem(0, strFormatted);
 		}
-
 		int cmd = pClient->DealCommand();
 		TRACE("ack:%d\r\n", cmd);
 		if (cmd < 0) break;
@@ -284,8 +283,9 @@ void CRemoteClientDlg::LoadFileInfo() {
 
 	PFILEINFO pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	CClientSocket* pClient = CClientSocket::getInstance();
+	int RECV_COUNT_FILE{ 0 };
 	while (pInfo->HasNext) {
-		TRACE("OnNMDblclkTreeDir(): %s isDir:%s\r\n",
+		TRACE("Client OnNMDblclkTreeDir(): %s isDir:%s\r\n",
 			pInfo->szFileName, pInfo->IsDirectory == 0 ? "true" : "false");
 		if (pInfo->IsDirectory) {
 			if (CString(pInfo->szFileName) == "." || CString(pInfo->szFileName) == "..") {
@@ -303,13 +303,13 @@ void CRemoteClientDlg::LoadFileInfo() {
 			CString strFormatted(pInfo->szFileName);
 			m_List.InsertItem(0, strFormatted);
 		}
-
+		RECV_COUNT_FILE++;
 		int cmd = pClient->DealCommand();
-		TRACE("ack:%d\r\n", cmd);
+//		TRACE("ack:%d\r\n", cmd);
 		if (cmd < 0) break;
 		pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	}
-
+	TRACE("RECV_COUNT_FILE = %d\r\n",RECV_COUNT_FILE);
 	pClient->CloseSocket();
 }
 
@@ -408,6 +408,8 @@ void CRemoteClientDlg::OnDownloadFile() {
 		fclose(pFile);
 		pClient->CloseSocket();
 	}
+	//@TODO:大文件传输需要额外的处理!
+
 }
 
 
@@ -428,7 +430,7 @@ void CRemoteClientDlg::OnDeleteFile() {
 	if (ret < 0) {
 		AfxMessageBox(_T("删除文件失败!"));
 	}
-	LoadFileCurrent();
+	LoadFileCurrent();//TODO:文件显示有缺漏!
 }
 
 
