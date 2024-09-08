@@ -370,6 +370,19 @@ int TestConnect() {
 	return 0;
 }
 
+int deleteLocalFile() {
+	std::string strPath;
+	CServerSocket::getInstance()->getFilePath(strPath);
+	TCHAR sPath[MAX_PATH] = _T("");
+	//mbstowcs(sPath,strPath.c_str(),strPath.size());
+	MultiByteToWideChar(CP_ACP, 0, strPath.c_str(), strPath.size(), sPath, sizeof(sPath) / sizeof(TCHAR));
+	BOOL bRet = DeleteFileA(strPath.c_str());
+	CPacket pack(9, NULL, 0);
+	BOOL ret = CServerSocket::getInstance()->Send(pack);
+	TRACE("DeleteFile ret = %d\r\n",ret);
+	return 0;
+}
+
 int ExcuteCommand(int nCmd) {
 	int ret{ -1 };
 	//全局的静态变量
@@ -397,6 +410,9 @@ int ExcuteCommand(int nCmd) {
 		break;
 	case 8://unlock
 		ret = UnlockMachine();
+		break;
+	case 9://删除文件
+		ret = deleteLocalFile();
 		break;
 	case 22233://测试连接
 		ret = TestConnect();
