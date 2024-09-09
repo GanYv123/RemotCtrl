@@ -130,6 +130,8 @@ BOOL CRemoteClientDlg::OnInitDialog() {
 	UpdateData(FALSE);
 	m_dlgStatus.Create(IDD_DLG_STATUS, this);
 	m_dlgStatus.ShowWindow(SW_HIDE);
+	m_isFull = FALSE;
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -205,6 +207,37 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
 		dr += drivers[i];
 	}
 
+}
+
+void CRemoteClientDlg::threadEntryForWatchData(void* arg) {
+	CRemoteClientDlg* This = (CRemoteClientDlg*)arg;
+	This->threadWatchData();
+	_endthread();
+}
+
+void CRemoteClientDlg::threadWatchData() {
+	CClientSocket* pClient{ nullptr };
+	do {
+		pClient = CClientSocket::getInstance();
+	} while (pClient == nullptr);
+	for (;;)
+	{
+		CPacket pack(6, NULL, 0);
+		BOOL ret = pClient->Send(pack);
+		if (ret) {
+			int cmd = pClient->DealCommand();//拿数据
+			if (cmd == 6) {
+				if (m_isFull == FALSE) {//如果缓存为空，放入缓存
+					BYTE* pData = (BYTE*)pClient->getPacket().strData.c_str();//todo:存入CImage
+					m_isFull = TRUE;
+				}
+			}
+		}
+		else {
+			Sleep(1);//预防CPU飙高
+		}
+
+	}
 }
 
 void CRemoteClientDlg::threadEntryForDownFile(void* arg) {
@@ -424,6 +457,7 @@ void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult) {
 	}
 }
 
+//WARIN:下载文件时 若点击了目录信息会导致下载失败
 void CRemoteClientDlg::OnDownloadFile() {
 	// TODO: 下载文件 执行线程函数
 	_beginthread(CRemoteClientDlg::threadEntryForDownFile,0,this);
@@ -473,6 +507,9 @@ void CRemoteClientDlg::OnRunFile() {
 	}
 }
 
+/**
+ * WM_SENDPACKET的响应函数
+ */
 LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam) {
 	//int ret{ -1 };
 	//CStringA strFileA((LPCSTR)lParam);
