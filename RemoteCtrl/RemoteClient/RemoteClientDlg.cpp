@@ -91,6 +91,7 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_COMMAND(ID_DOWNLOAD_FILE, &CRemoteClientDlg::OnDownloadFile)
 	ON_COMMAND(ID_DELETE_FILE, &CRemoteClientDlg::OnDeleteFile)
 	ON_COMMAND(ID_RUN_FILE, &CRemoteClientDlg::OnRunFile)
+	ON_MESSAGE(WM_SEND_PACKET,&CRemoteClientDlg::OnSendPacket)
 END_MESSAGE_MAP()
 
 
@@ -127,7 +128,8 @@ BOOL CRemoteClientDlg::OnInitDialog() {
 	m_server_address = 0x7f000001;
 	m_nPort = _T("2323");
 	UpdateData(FALSE);
-
+	m_dlgStatus.Create(IDD_DLG_STATUS, this);
+	m_dlgStatus.ShowWindow(SW_HIDE);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -203,6 +205,80 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
 		dr += drivers[i];
 	}
 
+}
+
+void CRemoteClientDlg::threadEntryForDownFile(void* arg) {
+	CRemoteClientDlg* This = (CRemoteClientDlg*)arg;
+	This->threadDownFile();
+	_endthread();
+}
+
+void CRemoteClientDlg::threadDownFile() {
+	int nListSelected = m_List.GetSelectionMark();
+	CString strFile = m_List.GetItemText(nListSelected, 0);
+	CFileDialog dlg(FALSE, _T("*"), strFile, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, NULL, this);
+
+	if (dlg.DoModal() == IDOK) {
+		FILE* pFile{ nullptr };
+		errno_t err;
+#ifdef _UNICODE
+		CStringA pFileA(dlg.GetPathName());
+		err = fopen_s(&pFile, pFileA, "wb+");
+#else
+		err = fopen_s(&pFile, dlg.GetPathName(), "wb+");
+#endif// _UNICODE
+		if (err != 0) {
+			AfxMessageBox(_T("本地无权限，文件无法创建!"));
+			m_dlgStatus.ShowWindow(SW_HIDE);
+			EndWaitCursor();
+			return;
+		}
+		HTREEITEM hSelected = m_Tree.GetSelectedItem();
+		strFile = GetPath(hSelected) + strFile;
+		/*
+		TRACE("%s\r\n", strFile);
+		int ret{ -1 };
+#ifdef _UNICODE
+		CStringA strFileA(strFile);
+		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+#else
+		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
+#endif // _UNICODE
+	//*/ 
+		int ret = SendMessage(WM_SEND_PACKET,4<<1|0,(LPARAM)(LPCTSTR)strFile);
+		CClientSocket* pClient = CClientSocket::getInstance();
+		do {
+			if (ret < 0) {
+				AfxMessageBox(_T("执行下载命令失败!!！"));
+				TRACE("执行下载失败:ret = %d\r\n", ret);
+				break;
+			}
+			long long nLength = *(long long*)pClient->getPacket().strData.c_str();
+			if (nLength == 0) {
+				AfxMessageBox(_T("文件长度为0，无法读取文件!"));
+				break;
+			}
+			long long nCount = 0;
+			//----------添加线程函数
+
+			while (nCount < nLength) {
+				pClient->DealCommand();
+				if (ret < 0) {
+					AfxMessageBox(_T("传输失败"));
+					TRACE("传输失败:ret = %d\r\n", ret);
+					break;
+				}
+				pClient->getPacket().strData.c_str();
+				fwrite(pClient->getPacket().strData.c_str(), 1, pClient->getPacket().strData.size(), pFile);
+				nCount += pClient->getPacket().strData.size();
+			}
+		} while (FALSE);
+		fclose(pFile);
+		pClient->CloseSocket();
+	}
+	m_dlgStatus.ShowWindow(SW_HIDE);
+	EndWaitCursor();
+	MessageBox(_T("下载完成!"),_T("完成"));
 }
 
 void CRemoteClientDlg::LoadFileCurrent() {
@@ -349,69 +425,14 @@ void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult) {
 }
 
 void CRemoteClientDlg::OnDownloadFile() {
-	// TODO: 下载文件
-	int nListSelected = m_List.GetSelectionMark();
-	CString strFile = m_List.GetItemText(nListSelected, 0);
-	CFileDialog dlg(FALSE, _T("*"),strFile,OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, NULL, this);
-	
-	if (dlg.DoModal() == IDOK) {
-		FILE* pFile{ nullptr };
-		errno_t err;
-#ifdef _UNICODE
-		CStringA pFileA(dlg.GetPathName());
-		err = fopen_s(&pFile, pFileA, "wb+");
-#else
-		err = fopen_s(&pFile, dlg.GetPathName(), "wb+");
-#endif// _UNICODE
-		if (err != 0) {
-			AfxMessageBox(_T("本地无权限，文件无法创建!"));
-			return;
-		}
-		HTREEITEM hSelected = m_Tree.GetSelectedItem();
-		strFile = GetPath(hSelected) + strFile;
-		TRACE("%s\r\n", strFile);
-		int ret{ -1 };
-
-#ifdef _UNICODE
-		CStringA strFileA(strFile);
-		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
-#else
-		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
-#endif // _UNICODE
-
-		CClientSocket* pClient = CClientSocket::getInstance();
-		do {
-			if (ret < 0) {
-				AfxMessageBox(_T("执行下载命令失败!!！"));
-				TRACE("执行下载失败:ret = %d\r\n", ret);
-				break;
-			}
-			long long nLength = *(long long*)pClient->getPacket().strData.c_str();
-			if (nLength == 0) {
-				AfxMessageBox(_T("文件长度为0，无法读取文件!"));
-				break;
-			}
-			long long nCount = 0;
-
-			while (nCount < nLength) {
-				pClient->DealCommand();
-				if (ret < 0) {
-					AfxMessageBox(_T("传输失败"));
-					TRACE("传输失败:ret = %d\r\n", ret);
-					break;
-				}
-				pClient->getPacket().strData.c_str();
-				fwrite(pClient->getPacket().strData.c_str(), 1, pClient->getPacket().strData.size(), pFile);
-				nCount += pClient->getPacket().strData.size();
-			}
-		} while (FALSE);
-		fclose(pFile);
-		pClient->CloseSocket();
-	}
-	//@TODO:大文件传输需要额外的处理!
-
+	// TODO: 下载文件 执行线程函数
+	_beginthread(CRemoteClientDlg::threadEntryForDownFile,0,this);
+	BeginWaitCursor();
+	m_dlgStatus.m_info.SetWindowText(_T("命令正在执行中！..."));
+	m_dlgStatus.ShowWindow(SW_SHOW);
+	m_dlgStatus.CenterWindow(this);
+	m_dlgStatus.SetActiveWindow();
 }
-
 
 void CRemoteClientDlg::OnDeleteFile() {
 	// TODO: 删除文件
@@ -430,7 +451,7 @@ void CRemoteClientDlg::OnDeleteFile() {
 	if (ret < 0) {
 		AfxMessageBox(_T("删除文件失败!"));
 	}
-	LoadFileCurrent();//TODO:文件显示有缺漏!
+	LoadFileCurrent();
 }
 
 
@@ -450,4 +471,22 @@ void CRemoteClientDlg::OnRunFile() {
 	if (ret < 0) {
 		AfxMessageBox(_T("打开文件失败"));
 	}
+}
+
+LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam) {
+	//int ret{ -1 };
+	//CStringA strFileA((LPCSTR)lParam);
+	//ret = sendCommandPacket(wParam>>1, wParam&1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+	CString strFile = (LPCTSTR)lParam;
+	TRACE("%s\r\n", strFile);
+	int ret{ -1 };
+#ifdef _UNICODE
+	CStringA strFileA(strFile);
+	//ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+	ret = sendCommandPacket(wParam >> 1, wParam & 1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+#else
+	//ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
+	ret = sendCommandPacket(wParam >> 1, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
+#endif // _UNICODE
+	return ret;
 }
