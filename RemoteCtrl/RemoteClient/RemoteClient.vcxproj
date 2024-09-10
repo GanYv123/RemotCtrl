@@ -191,6 +191,7 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StatusDlg.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="WatchDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClientSocket.cpp" />
@@ -203,6 +204,7 @@
     <ClCompile Include="RemoteClient.cpp" />
     <ClCompile Include="RemoteClientDlg.cpp" />
     <ClCompile Include="StatusDlg.cpp" />
+    <ClCompile Include="WatchDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RemoteClient.rc" />

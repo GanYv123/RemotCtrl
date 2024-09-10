@@ -5,6 +5,7 @@
 #pragma once
 #include "ClientSocket.h"
 #include "StatusDlg.h"
+#include "WatchDialog.h"
 
 #define WM_SEND_PACKET (WM_USER+1) //发送数据的消息
 
@@ -21,9 +22,12 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
+public:
+	BOOL isFull()const;
+	CImage& GetImage();
 private:
 	CImage m_image;//缓存
-	BOOL m_isFull;//缓存是否满 true 有 false无
+	BOOL m_isFull;//缓存是否满 true->有 false->无
 private:
 	static void threadEntryForWatchData(void* arg);
 	void threadWatchData();
@@ -47,6 +51,7 @@ private:
  */
 	int sendCommandPacket(int nCmd, BOOL bAutoClose = TRUE, BYTE* pData = NULL, size_t nLength = 0);
 	// 实现
+
 protected:
 	HICON m_hIcon;
 	CStatusDlg m_dlgStatus;
@@ -72,4 +77,5 @@ public:
 	afx_msg void OnDeleteFile();
 	afx_msg void OnRunFile();
 	afx_msg LRESULT OnSendPacket(WPARAM wParam,LPARAM lParam);
+	afx_msg void OnBnClickedBtnStartWatch();
 };

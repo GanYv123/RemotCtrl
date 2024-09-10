@@ -49,7 +49,7 @@ END_MESSAGE_MAP()
 
 CRemoteClientDlg::CRemoteClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_REMOTECLIENT_DIALOG, pParent)
-	, m_server_address(0), m_nPort(_T("")) {
+	, m_server_address(0), m_nPort(_T("")) ,m_isFull(FALSE){
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -60,6 +60,10 @@ void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX) {
 	DDX_Control(pDX, IDC_TREE_DIR, m_Tree);
 	DDX_Control(pDX, IDC_LIST_FILE, m_List);
 }
+
+BOOL CRemoteClientDlg::isFull() const { return m_isFull; }
+
+CImage& CRemoteClientDlg::GetImage() { return m_image; }
 
 int CRemoteClientDlg::sendCommandPacket(int nCmd, BOOL bAutoClose, BYTE* pData, size_t nLength) {
 	UpdateData();
@@ -92,6 +96,7 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_COMMAND(ID_DELETE_FILE, &CRemoteClientDlg::OnDeleteFile)
 	ON_COMMAND(ID_RUN_FILE, &CRemoteClientDlg::OnRunFile)
 	ON_MESSAGE(WM_SEND_PACKET,&CRemoteClientDlg::OnSendPacket)
+	ON_BN_CLICKED(IDC_BTN_START_WATCH, &CRemoteClientDlg::OnBnClickedBtnStartWatch)
 END_MESSAGE_MAP()
 
 
@@ -225,11 +230,26 @@ void CRemoteClientDlg::threadWatchData() {
 		CPacket pack(6, NULL, 0);
 		BOOL ret = pClient->Send(pack);
 		if (ret) {
-			int cmd = pClient->DealCommand();//拿数据
+			int cmd = pClient->DealCommand();//拿数据到缓存
 			if (cmd == 6) {
 				if (m_isFull == FALSE) {//如果缓存为空，放入缓存
 					BYTE* pData = (BYTE*)pClient->getPacket().strData.c_str();//todo:存入CImage
-					m_isFull = TRUE;
+					HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
+					if (hMem == NULL) {
+						TRACE("内存不足");
+						Sleep(1);
+						continue;
+					}
+					IStream* pStream = NULL;
+					HRESULT hRet = CreateStreamOnHGlobal(hMem,TRUE,&pStream);
+					if (hRet == S_OK) {
+						ULONG length = 0;
+						pStream->Write(pData, pClient->getPacket().strData.size(),&length);
+						LARGE_INTEGER bg = { 0 };
+						pStream->Seek(bg, STREAM_SEEK_SET, NULL);
+						m_image.Load(pStream);
+						m_isFull = TRUE;
+					}
 				}
 			}
 		}
@@ -301,7 +321,7 @@ void CRemoteClientDlg::threadDownFile() {
 					TRACE("传输失败:ret = %d\r\n", ret);
 					break;
 				}
-				pClient->getPacket().strData.c_str();
+				//pClient->getPacket().strData.c_str();
 				fwrite(pClient->getPacket().strData.c_str(), 1, pClient->getPacket().strData.size(), pFile);
 				nCount += pClient->getPacket().strData.size();
 			}
@@ -526,4 +546,10 @@ LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam) {
 	ret = sendCommandPacket(wParam >> 1, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
 #endif // _UNICODE
 	return ret;
+}
+
+void CRemoteClientDlg::OnBnClickedBtnStartWatch() {
+	_beginthread(CRemoteClientDlg::threadEntryForWatchData,0,this);
+	CWatchDialog dlg(this);
+	dlg.DoModal();
 }
