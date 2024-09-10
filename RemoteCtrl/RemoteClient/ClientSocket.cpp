@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "ClientSocket.h"
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 409600*3
 
 CClientSocket::CClientSocket() {
 	m_sock = INVALID_SOCKET;

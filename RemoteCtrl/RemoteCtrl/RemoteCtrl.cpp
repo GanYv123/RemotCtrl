@@ -277,7 +277,7 @@ int SendScreen() {
 		分别获取屏幕的水平和垂直分辨率（宽度和高度，以像素为单位）。
 	*/
 	screen.Create(nWidth, nHeight, nBitPerpixel);
-	BitBlt(screen.GetDC(), 0, 0, 1920, 1020, hScreen, 0, 0, SRCCOPY);
+	BitBlt(screen.GetDC(), 0, 0, nWidth, nHeight, hScreen, 0, 0, SRCCOPY);
 	ReleaseDC(NULL,hScreen);
 	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
 	if (hMem == NULL) return -1;

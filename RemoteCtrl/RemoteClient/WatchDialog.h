@@ -24,4 +24,7 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	// 屏幕图片显示
+	CStatic m_picture;
+	//afx_msg void OnStnClickedWatch();
 };

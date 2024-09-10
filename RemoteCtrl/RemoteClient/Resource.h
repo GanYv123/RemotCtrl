@@ -9,7 +9,6 @@
 #define IDR_MAINFRAME                   128
 #define IDR_MENU_RCLICK                 130
 #define IDD_DLG_STATUS                  131
-#define IDD_DIALOG1                     133
 #define IDD_DIGWATCH                    133
 #define IDC_BTN_TEST                    1000
 #define IDC_IPADDRESS_SERV              1001

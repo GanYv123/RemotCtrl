@@ -49,7 +49,7 @@ END_MESSAGE_MAP()
 
 CRemoteClientDlg::CRemoteClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_REMOTECLIENT_DIALOG, pParent)
-	, m_server_address(0), m_nPort(_T("")) ,m_isFull(FALSE){
+	, m_server_address(0), m_nPort(_T("")), m_isFull(FALSE) {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -64,6 +64,10 @@ void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX) {
 BOOL CRemoteClientDlg::isFull() const { return m_isFull; }
 
 CImage& CRemoteClientDlg::GetImage() { return m_image; }
+
+void CRemoteClientDlg::setImageStatus(BOOL IsFull) {
+	m_isFull = IsFull;
+}
 
 int CRemoteClientDlg::sendCommandPacket(int nCmd, BOOL bAutoClose, BYTE* pData, size_t nLength) {
 	UpdateData();
@@ -95,7 +99,7 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_COMMAND(ID_DOWNLOAD_FILE, &CRemoteClientDlg::OnDownloadFile)
 	ON_COMMAND(ID_DELETE_FILE, &CRemoteClientDlg::OnDeleteFile)
 	ON_COMMAND(ID_RUN_FILE, &CRemoteClientDlg::OnRunFile)
-	ON_MESSAGE(WM_SEND_PACKET,&CRemoteClientDlg::OnSendPacket)
+	ON_MESSAGE(WM_SEND_PACKET, &CRemoteClientDlg::OnSendPacket)
 	ON_BN_CLICKED(IDC_BTN_START_WATCH, &CRemoteClientDlg::OnBnClickedBtnStartWatch)
 END_MESSAGE_MAP()
 
@@ -221,41 +225,43 @@ void CRemoteClientDlg::threadEntryForWatchData(void* arg) {
 }
 
 void CRemoteClientDlg::threadWatchData() {
+	Sleep(50);
 	CClientSocket* pClient{ nullptr };
 	do {
 		pClient = CClientSocket::getInstance();
 	} while (pClient == nullptr);
-	for (;;)
-	{
-		CPacket pack(6, NULL, 0);
-		BOOL ret = pClient->Send(pack);
-		if (ret) {
-			int cmd = pClient->DealCommand();//拿数据到缓存
-			if (cmd == 6) {
-				if (m_isFull == FALSE) {//如果缓存为空，放入缓存
-					BYTE* pData = (BYTE*)pClient->getPacket().strData.c_str();//todo:存入CImage
-					HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
-					if (hMem == NULL) {
-						TRACE("内存不足");
-						Sleep(1);
-						continue;
-					}
-					IStream* pStream = NULL;
-					HRESULT hRet = CreateStreamOnHGlobal(hMem,TRUE,&pStream);
-					if (hRet == S_OK) {
-						ULONG length = 0;
-						pStream->Write(pData, pClient->getPacket().strData.size(),&length);
-						LARGE_INTEGER bg = { 0 };
-						pStream->Seek(bg, STREAM_SEEK_SET, NULL);
-						m_image.Load(pStream);
-						m_isFull = TRUE;
-					}
+	ULONGLONG tick = GetTickCount64();
+	for (;;) {
+		if (m_isFull == FALSE) {//如果缓存为空，放入缓存
+			int ret = SendMessage(WM_SEND_PACKET, 6 << 1 | 1);
+			if (ret == 6) {
+
+				BYTE* pData = (BYTE*)pClient->getPacket().strData.c_str();//todo:存入CImage
+				HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
+				if (hMem == NULL) {
+					TRACE("内存不足");
+					Sleep(1);
+					continue;
 				}
+				IStream* pStream = NULL;
+				HRESULT hRet = CreateStreamOnHGlobal(hMem, TRUE, &pStream);
+				if (hRet == S_OK) {
+					ULONG length = 0;
+					pStream->Write(pData, pClient->getPacket().strData.size(), &length);
+					LARGE_INTEGER bg = { 0 };
+					pStream->Seek(bg, STREAM_SEEK_SET, NULL);
+					m_image.Load(pStream);
+					m_isFull = TRUE;
+				}
+			}
+			else {
+				Sleep(1);//预防CPU飙高
 			}
 		}
 		else {
-			Sleep(1);//预防CPU飙高
+			Sleep(1);
 		}
+
 
 	}
 }
@@ -297,8 +303,8 @@ void CRemoteClientDlg::threadDownFile() {
 #else
 		ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
 #endif // _UNICODE
-	//*/ 
-		int ret = SendMessage(WM_SEND_PACKET,4<<1|0,(LPARAM)(LPCTSTR)strFile);
+	//*/
+		int ret = SendMessage(WM_SEND_PACKET, 4 << 1 | 0, (LPARAM)(LPCTSTR)strFile);
 		CClientSocket* pClient = CClientSocket::getInstance();
 		do {
 			if (ret < 0) {
@@ -331,11 +337,11 @@ void CRemoteClientDlg::threadDownFile() {
 	}
 	m_dlgStatus.ShowWindow(SW_HIDE);
 	EndWaitCursor();
-	MessageBox(_T("下载完成!"),_T("完成"));
+	MessageBox(_T("下载完成!"), _T("完成"));
 }
 
 void CRemoteClientDlg::LoadFileCurrent() {
-    HTREEITEM hTree = m_Tree.GetSelectedItem();
+	HTREEITEM hTree = m_Tree.GetSelectedItem();
 	CString strPath = GetPath(hTree);
 	m_List.DeleteAllItems();
 #ifdef _UNICODE
@@ -434,11 +440,11 @@ void CRemoteClientDlg::LoadFileInfo() {
 		}
 		RECV_COUNT_FILE++;
 		int cmd = pClient->DealCommand();
-//		TRACE("ack:%d\r\n", cmd);
+		//		TRACE("ack:%d\r\n", cmd);
 		if (cmd < 0) break;
 		pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	}
-	TRACE("RECV_COUNT_FILE = %d\r\n",RECV_COUNT_FILE);
+	TRACE("RECV_COUNT_FILE = %d\r\n", RECV_COUNT_FILE);
 	pClient->CloseSocket();
 }
 
@@ -480,7 +486,7 @@ void CRemoteClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult) {
 //WARIN:下载文件时 若点击了目录信息会导致下载失败
 void CRemoteClientDlg::OnDownloadFile() {
 	// TODO: 下载文件 执行线程函数
-	_beginthread(CRemoteClientDlg::threadEntryForDownFile,0,this);
+	_beginthread(CRemoteClientDlg::threadEntryForDownFile, 0, this);
 	BeginWaitCursor();
 	m_dlgStatus.m_info.SetWindowText(_T("命令正在执行中！..."));
 	m_dlgStatus.ShowWindow(SW_SHOW);
@@ -531,25 +537,37 @@ void CRemoteClientDlg::OnRunFile() {
  * WM_SENDPACKET的响应函数
  */
 LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam) {
-	//int ret{ -1 };
-	//CStringA strFileA((LPCSTR)lParam);
-	//ret = sendCommandPacket(wParam>>1, wParam&1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+	int ret{ 0 };
+	int cmd = wParam >> 1;
 	CString strFile = (LPCTSTR)lParam;
 	TRACE("%s\r\n", strFile);
-	int ret{ -1 };
-#ifdef _UNICODE
 	CStringA strFileA(strFile);
-	//ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
-	ret = sendCommandPacket(wParam >> 1, wParam & 1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+
+	switch (cmd) {
+	case 4:
+#ifdef _UNICODE
+		ret = sendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
 #else
-	//ret = sendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
-	ret = sendCommandPacket(wParam >> 1, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
+		ret = sendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
 #endif // _UNICODE
+		break;
+	case 6:
+#ifdef _UNICODE
+		ret = sendCommandPacket(cmd, wParam & 1);
+#else
+		ret = sendCommandPacket(cmd, wParam & 1);
+#endif // _UNICODE
+		break;
+	default:
+		ret = -1;
+		break;
+	}
+
 	return ret;
 }
 
 void CRemoteClientDlg::OnBnClickedBtnStartWatch() {
-	_beginthread(CRemoteClientDlg::threadEntryForWatchData,0,this);
 	CWatchDialog dlg(this);
+	_beginthread(CRemoteClientDlg::threadEntryForWatchData, 0, this);
 	dlg.DoModal();
 }

@@ -25,6 +25,7 @@ protected:
 public:
 	BOOL isFull()const;
 	CImage& GetImage();
+	void setImageStatus(BOOL isFull = FALSE);
 private:
 	CImage m_image;//缓存
 	BOOL m_isFull;//缓存是否满 true->有 false->无
