@@ -276,7 +276,7 @@ int SendScreen() {
 	/*GetDeviceCaps(hScreen, HORZRES) 和 GetDeviceCaps(hScreen, VERTRES):
 		分别获取屏幕的水平和垂直分辨率（宽度和高度，以像素为单位）。
 	*/
-	screen.Create(nWidth, nHeight, nBitPerpixel);
+	screen.Create(nWidth, nHeight, nBitPerpixel);//2560 1440
 	BitBlt(screen.GetDC(), 0, 0, nWidth, nHeight, hScreen, 0, 0, SRCCOPY);
 	ReleaseDC(NULL,hScreen);
 	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, 0);
@@ -289,7 +289,7 @@ int SendScreen() {
 		LARGE_INTEGER bg = {0};
 		pStream->Seek(bg, STREAM_SEEK_SET, NULL);
 		PBYTE pData = (PBYTE)GlobalLock(hMem);
-		size_t nSize = GlobalSize(hMem);
+		size_t nSize = GlobalSize(hMem); //2.5k -> 457494
 		CPacket pack(6,(BYTE*)pData,nSize);
 		CServerSocket::getInstance()->Send(pack);
 		GlobalUnlock(hMem);

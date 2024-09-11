@@ -242,7 +242,8 @@ void CRemoteClientDlg::threadWatchData() {
 					TRACE("内存不足");
 					Sleep(1);
 					continue;
-				}
+				}      
+
 				IStream* pStream = NULL;
 				HRESULT hRet = CreateStreamOnHGlobal(hMem, TRUE, &pStream);
 				if (hRet == S_OK) {
@@ -253,6 +254,8 @@ void CRemoteClientDlg::threadWatchData() {
 					m_image.Load(pStream);
 					m_isFull = TRUE;
 				}
+				// 释放 GlobalAlloc 分配的内存
+				GlobalFree(hMem);
 			}
 			else {
 				Sleep(1);//预防CPU飙高
@@ -261,7 +264,6 @@ void CRemoteClientDlg::threadWatchData() {
 		else {
 			Sleep(1);
 		}
-
 
 	}
 }
