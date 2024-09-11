@@ -541,24 +541,24 @@ void CRemoteClientDlg::OnRunFile() {
 LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam) {
 	int ret{ 0 };
 	int cmd = wParam >> 1;
-	CString strFile = (LPCTSTR)lParam;
-	TRACE("%s\r\n", strFile);
-	CStringA strFileA(strFile);
-
 	switch (cmd) {
-	case 4:
+	case 4: {
+		CString strFile = (LPCTSTR)lParam;
+		CStringA strFileA(strFile);
 #ifdef _UNICODE
 		ret = sendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
 #else
 		ret = sendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
 #endif // _UNICODE
+	}
+		  break;
+	case 5: {//鼠标操作
+		ret = sendCommandPacket(cmd, wParam & 1, (BYTE*)lParam, sizeof(MOUSEEV));
+	}
 		break;
-	case 6:
-#ifdef _UNICODE
+	case 6: {
 		ret = sendCommandPacket(cmd, wParam & 1);
-#else
-		ret = sendCommandPacket(cmd, wParam & 1);
-#endif // _UNICODE
+	}
 		break;
 	default:
 		ret = -1;
