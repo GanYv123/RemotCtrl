@@ -316,11 +316,13 @@ unsigned int WINAPI threadLockDlg(void* arg) {
 
 	dlg.ShowWindow(SW_SHOWNA);
 	dlg.MoveWindow(rect);
-	dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);//置顶
+	//置顶窗口
+	dlg.SetWindowPos(&dlg.wndTopMost, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 	ShowCursor(FALSE);
 	//隐藏任务栏
 	::ShowWindow(::FindWindow(_T("Shell_Traywnd"), NULL), SW_HIDE);
 	/*限制鼠标活动范围*/
+	dlg.GetWindowRect(rect);
 	rect.left = 0;
 	rect.right = 1;
 	rect.bottom = 1;
@@ -339,8 +341,9 @@ unsigned int WINAPI threadLockDlg(void* arg) {
 				break;
 		}
 	}
-
+	//恢复鼠标
 	ShowCursor(TRUE);
+	//恢复任务栏
 	::ShowWindow(::FindWindow(_T("Shell_Traywnd"), NULL), SW_SHOW);
 	dlg.DestroyWindow();
 	_endthreadex(0);
@@ -365,6 +368,8 @@ int UnlockMachine() {
 	//dlg.SendMessage(WM_KEYDOWN, 0x41, 0X01E0001);
 	//::SendMessage(dlg.m_hWnd,WM_KEYDOWN,0X41, 0X01E0001);//Windows消息泵只能发同一线程
 	::PostThreadMessage(threadId,WM_KEYDOWN,0x41,0);
+	CPacket pack(8, NULL, 0);
+	CServerSocket::getInstance()->Send(pack);
 	return 0;
 }
 
