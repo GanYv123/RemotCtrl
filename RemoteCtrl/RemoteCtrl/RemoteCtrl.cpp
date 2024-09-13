@@ -151,7 +151,7 @@ int MouseEvent() {
 	if (CServerSocket::getInstance()->getMouseEvent(mouse)) {
 
 		DWORD nFlags = 0;
-		if(nFlags)
+		//if(nFlags)
 		switch (mouse.nButton) {
 		case 0:	//左键
 			nFlags = 1;
