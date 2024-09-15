@@ -33,12 +33,12 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="DiagramOwner">C1QOuPHrrEu0nlxK5T669AAA</XPD:REF>
 <XPD:OBJ name="DiagramView" type="UMLClassDiagramView" guid="3htNZunFh0evXZf9+WcoQAAA">
 <XPD:REF name="Diagram">rDwpg3RSaUCWSIY90qWHyQAA</XPD:REF>
-<XPD:ATTR name="#OwnedViews" type="integer">15</XPD:ATTR>
+<XPD:ATTR name="#OwnedViews" type="integer">17</XPD:ATTR>
 <XPD:OBJ name="OwnedViews[0]" type="UMLClassView" guid="wef87M93qEydRzwCHdheHwAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">196</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">364</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">376</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">249</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">264</XPD:ATTR>
 <XPD:REF name="Model">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
@@ -68,7 +68,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:OBJ name="OwnedViews[1]" type="UMLClassView" guid="LitswBGzZUmtHhmJdSjv9gAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
-<XPD:ATTR name="Left" type="integer">868</XPD:ATTR>
+<XPD:ATTR name="Left" type="integer">864</XPD:ATTR>
 <XPD:ATTR name="Top" type="integer">216</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">300</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">212</XPD:ATTR>
@@ -563,7 +563,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:OBJ name="OwnedViews[12]" type="UMLAssociationView" guid="uiaxm6bjBkmRy1jqRlaIQwAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
-<XPD:ATTR name="Points" type="Points">808,431;868,399</XPD:ATTR>
+<XPD:ATTR name="Points" type="Points">808,430;864,400</XPD:ATTR>
 <XPD:REF name="Model">rCpNXTaUwk2GpI/JgaynyQAA</XPD:REF>
 <XPD:REF name="Head">LitswBGzZUmtHhmJdSjv9gAA</XPD:REF>
 <XPD:REF name="Tail">HZ0fiDzXKEOIFK6RojRIXgAA</XPD:REF>
@@ -647,7 +647,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:OBJ name="OwnedViews[13]" type="UMLAssociationView" guid="flgnh80iQESHS3adlWsFLAAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
-<XPD:ATTR name="Points" type="Points">444,499;528,501</XPD:ATTR>
+<XPD:ATTR name="Points" type="Points">444,506;528,506</XPD:ATTR>
 <XPD:REF name="Model">Eb84taNv3kK0DuZ4ICOEEAAA</XPD:REF>
 <XPD:REF name="Head">HZ0fiDzXKEOIFK6RojRIXgAA</XPD:REF>
 <XPD:REF name="Tail">wef87M93qEydRzwCHdheHwAA</XPD:REF>
@@ -731,7 +731,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:OBJ name="OwnedViews[14]" type="UMLAssociationView" guid="mnCdphIeeUS0iUJnNK0YZQAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
-<XPD:ATTR name="Points" type="Points">341,627;363,760</XPD:ATTR>
+<XPD:ATTR name="Points" type="Points">342,639;362,760</XPD:ATTR>
 <XPD:REF name="Model">RRrHPs8Xd0ix89/fn15MbAAA</XPD:REF>
 <XPD:REF name="Head">85uVzz5l3km+QAKHvm+mrQAA</XPD:REF>
 <XPD:REF name="Tail">wef87M93qEydRzwCHdheHwAA</XPD:REF>
@@ -812,9 +812,71 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="Model">BHQdQKH5l0iB2Yx4/Y7kRQAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
+<XPD:OBJ name="OwnedViews[15]" type="UMLClassView" guid="UOWkVULSEEqoiUcPO9CxOAAA">
+<XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
+<XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
+<XPD:ATTR name="Left" type="integer">872</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">568</XPD:ATTR>
+<XPD:ATTR name="Width" type="integer">186</XPD:ATTR>
+<XPD:ATTR name="Height" type="integer">56</XPD:ATTR>
+<XPD:REF name="Model">34VW/zI3n0mPQjyAaMp/7AAA</XPD:REF>
+<XPD:OBJ name="NameCompartment" type="UMLNameCompartmentView" guid="YMiB61QTJEmlO8xW0zhXqwAA">
+<XPD:OBJ name="NameLabel" type="LabelView" guid="6QCkixUGeku/etHX6IoWLgAA">
+<XPD:ATTR name="FontStyle" type="integer">1</XPD:ATTR>
+<XPD:ATTR name="Text" type="string">CEdoyunTool</XPD:ATTR>
+</XPD:OBJ>
+<XPD:OBJ name="StereotypeLabel" type="LabelView" guid="4nYATrQu0Uutd77O+W7e3AAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+</XPD:OBJ>
+<XPD:OBJ name="PropertyLabel" type="LabelView" guid="UYZg8RIGckSJgh+InAi0EwAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:ATTR name="#OwnedElements" type="integer">22</XPD:ATTR>
+<XPD:OBJ name="AttributeCompartment" type="UMLAttributeCompartmentView" guid="tzXe0ZtOYU2m8uquhzWYAgAA">
+<XPD:REF name="Model">34VW/zI3n0mPQjyAaMp/7AAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="OperationCompartment" type="UMLOperationCompartmentView" guid="xRlK5Vct7UKTXLpFOFbkrwAA">
+<XPD:REF name="Model">34VW/zI3n0mPQjyAaMp/7AAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="TemplateParameterCompartment" type="UMLTemplateParameterCompartmentView" guid="pJjwx7DHTEu0RFLcv91m5AAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+<XPD:REF name="Model">34VW/zI3n0mPQjyAaMp/7AAA</XPD:REF>
+</XPD:OBJ>
+</XPD:OBJ>
+<XPD:OBJ name="OwnedViews[16]" type="UMLClassView" guid="ULRQ0SB7eEmYZWYgOLde7QAA">
+<XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
+<XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
+<XPD:ATTR name="Left" type="integer">1084</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">568</XPD:ATTR>
+<XPD:ATTR name="Width" type="integer">171</XPD:ATTR>
+<XPD:ATTR name="Height" type="integer">56</XPD:ATTR>
+<XPD:REF name="Model">dRRuq3+3c0CM+Ji32vaKYwAA</XPD:REF>
+<XPD:OBJ name="NameCompartment" type="UMLNameCompartmentView" guid="PomsaHXEeE+xQzET3DL2aAAA">
+<XPD:OBJ name="NameLabel" type="LabelView" guid="XF0aOtfzxUqSFiZ38TI52QAA">
+<XPD:ATTR name="FontStyle" type="integer">1</XPD:ATTR>
+<XPD:ATTR name="Text" type="string">CCommand</XPD:ATTR>
+</XPD:OBJ>
+<XPD:OBJ name="StereotypeLabel" type="LabelView" guid="vEV1owN/AU+7D2XTWhkSRAAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+</XPD:OBJ>
+<XPD:OBJ name="PropertyLabel" type="LabelView" guid="1PGtxm6zEU2X05ho1RnfjgAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+</XPD:OBJ>
+</XPD:OBJ>
+<XPD:OBJ name="AttributeCompartment" type="UMLAttributeCompartmentView" guid="g6KOyhV0X0SshvVyIZQj2wAA">
+<XPD:REF name="Model">dRRuq3+3c0CM+Ji32vaKYwAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="OperationCompartment" type="UMLOperationCompartmentView" guid="m3OWBIkgSk+/+OhtDajvzwAA">
+<XPD:REF name="Model">dRRuq3+3c0CM+Ji32vaKYwAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="TemplateParameterCompartment" type="UMLTemplateParameterCompartmentView" guid="3E3c7qRyFk65/RhVCLJ/MwAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+<XPD:REF name="Model">dRRuq3+3c0CM+Ji32vaKYwAA</XPD:REF>
+</XPD:OBJ>
+</XPD:OBJ>
+</XPD:OBJ>
+</XPD:OBJ>
+<XPD:ATTR name="#OwnedElements" type="integer">24</XPD:ATTR>
 <XPD:OBJ name="OwnedElements[0]" type="UMLClass" guid="vIzhW+ogSkKBsOI68hjOzgAA">
 <XPD:ATTR name="Name" type="string">global</XPD:ATTR>
 <XPD:ATTR name="Documentation" type="string">此类中的函数 均是全局函数
@@ -825,23 +887,8 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="Views[1]">695F+hb8vEG93VaKbEFJbwAA</XPD:REF>
 <XPD:REF name="Views[2]">WhleSkeP20ScPOmKpaZCQwAA</XPD:REF>
 <XPD:REF name="Views[3]">wbY0IGlsqk6WFUfogad1PwAA</XPD:REF>
-<XPD:ATTR name="#Operations" type="integer">14</XPD:ATTR>
-<XPD:OBJ name="Operations[0]" type="UMLOperation" guid="/htPYE8O7EuHvpqzKFnsiQAA">
-<XPD:ATTR name="Name" type="string">Dump</XPD:ATTR>
-<XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
-<XPD:ATTR name="#Parameters" type="integer">2</XPD:ATTR>
-<XPD:OBJ name="Parameters[0]" type="UMLParameter" guid="FM6av54lUUubTyEMvRDe3gAA">
-<XPD:ATTR name="Name" type="string">pData</XPD:ATTR>
-<XPD:ATTR name="TypeExpression" type="string">BYTE*</XPD:ATTR>
-<XPD:REF name="BehavioralFeature">/htPYE8O7EuHvpqzKFnsiQAA</XPD:REF>
-</XPD:OBJ>
-<XPD:OBJ name="Parameters[1]" type="UMLParameter" guid="xcPOXjorDk2OTwNdi7MwyAAA">
-<XPD:ATTR name="Name" type="string">nSize</XPD:ATTR>
-<XPD:ATTR name="TypeExpression" type="string">size_t</XPD:ATTR>
-<XPD:REF name="BehavioralFeature">/htPYE8O7EuHvpqzKFnsiQAA</XPD:REF>
-</XPD:OBJ>
-</XPD:OBJ>
-<XPD:OBJ name="Operations[1]" type="UMLOperation" guid="YUdN+yidMEiM6QfyObBP4wAA">
+<XPD:ATTR name="#Operations" type="integer">13</XPD:ATTR>
+<XPD:OBJ name="Operations[0]" type="UMLOperation" guid="YUdN+yidMEiM6QfyObBP4wAA">
 <XPD:ATTR name="Name" type="string">MakeDriverInfo</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -853,7 +900,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="#CallActions" type="integer">1</XPD:ATTR>
 <XPD:REF name="CallActions[0]">ePWsWbUfSkOF6T4ZBAOOdAAA</XPD:REF>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[2]" type="UMLOperation" guid="S1XG0jaLoki42vTPlH+mJwAA">
+<XPD:OBJ name="Operations[1]" type="UMLOperation" guid="S1XG0jaLoki42vTPlH+mJwAA">
 <XPD:ATTR name="Name" type="string">MakeDirectoryInfo</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -865,7 +912,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="#CallActions" type="integer">1</XPD:ATTR>
 <XPD:REF name="CallActions[0]">gALH2Exk90OU5dVWQknx9gAA</XPD:REF>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[3]" type="UMLOperation" guid="Go0AMybYkUGe9V5gg6KsRwAA">
+<XPD:OBJ name="Operations[2]" type="UMLOperation" guid="Go0AMybYkUGe9V5gg6KsRwAA">
 <XPD:ATTR name="Name" type="string">RunFile</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -875,7 +922,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">Go0AMybYkUGe9V5gg6KsRwAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[4]" type="UMLOperation" guid="vgNZeNH81E6TsLdNH4c7OwAA">
+<XPD:OBJ name="Operations[3]" type="UMLOperation" guid="vgNZeNH81E6TsLdNH4c7OwAA">
 <XPD:ATTR name="Name" type="string">DownloadFile</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -885,7 +932,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">vgNZeNH81E6TsLdNH4c7OwAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[5]" type="UMLOperation" guid="xw1UTH4+7UOL7rj2TcrkNwAA">
+<XPD:OBJ name="Operations[4]" type="UMLOperation" guid="xw1UTH4+7UOL7rj2TcrkNwAA">
 <XPD:ATTR name="Name" type="string">MouseEvent</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -895,7 +942,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">xw1UTH4+7UOL7rj2TcrkNwAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[6]" type="UMLOperation" guid="dlJTj5TPykqKrMmMGHHTQwAA">
+<XPD:OBJ name="Operations[5]" type="UMLOperation" guid="dlJTj5TPykqKrMmMGHHTQwAA">
 <XPD:ATTR name="Name" type="string">SendScreen</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -905,7 +952,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">dlJTj5TPykqKrMmMGHHTQwAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[7]" type="UMLOperation" guid="0t+6f5YnXkS2oLfTnOiLuAAA">
+<XPD:OBJ name="Operations[6]" type="UMLOperation" guid="0t+6f5YnXkS2oLfTnOiLuAAA">
 <XPD:ATTR name="Name" type="string">threadLockDlg</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">2</XPD:ATTR>
@@ -920,7 +967,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">0t+6f5YnXkS2oLfTnOiLuAAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[8]" type="UMLOperation" guid="4Sfx1Iul1Euar6WGEGfiKAAA">
+<XPD:OBJ name="Operations[7]" type="UMLOperation" guid="4Sfx1Iul1Euar6WGEGfiKAAA">
 <XPD:ATTR name="Name" type="string">LockMachine</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -930,7 +977,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">4Sfx1Iul1Euar6WGEGfiKAAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[9]" type="UMLOperation" guid="eaZKXk4nP0CWbnIwQRrHKQAA">
+<XPD:OBJ name="Operations[8]" type="UMLOperation" guid="eaZKXk4nP0CWbnIwQRrHKQAA">
 <XPD:ATTR name="Name" type="string">UnlockMachine</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -940,7 +987,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">eaZKXk4nP0CWbnIwQRrHKQAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[10]" type="UMLOperation" guid="SFoab5GFEUyEN5A4uSNAqQAA">
+<XPD:OBJ name="Operations[9]" type="UMLOperation" guid="SFoab5GFEUyEN5A4uSNAqQAA">
 <XPD:ATTR name="Name" type="string">TestConnect</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -950,7 +997,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">SFoab5GFEUyEN5A4uSNAqQAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[11]" type="UMLOperation" guid="GpLovDsmtkS9MBjVSEk91gAA">
+<XPD:OBJ name="Operations[10]" type="UMLOperation" guid="GpLovDsmtkS9MBjVSEk91gAA">
 <XPD:ATTR name="Name" type="string">deleteLocalFile</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -960,7 +1007,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="BehavioralFeature">GpLovDsmtkS9MBjVSEk91gAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[12]" type="UMLOperation" guid="2UYUk4jAwUCXzDNBlnVa8QAA">
+<XPD:OBJ name="Operations[11]" type="UMLOperation" guid="2UYUk4jAwUCXzDNBlnVa8QAA">
 <XPD:ATTR name="Name" type="string">ExcuteCommand</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">2</XPD:ATTR>
@@ -978,7 +1025,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="CallActions[0]">Qx2ZGaIAiEqGMb+3nnDdBwAA</XPD:REF>
 <XPD:REF name="CallActions[1]">XjSlF3xrQE29C8abRwu0sgAA</XPD:REF>
 </XPD:OBJ>
-<XPD:OBJ name="Operations[13]" type="UMLOperation" guid="JtbLA26aMU2ooU0hgxO9xQAA">
+<XPD:OBJ name="Operations[12]" type="UMLOperation" guid="JtbLA26aMU2ooU0hgxO9xQAA">
 <XPD:ATTR name="Name" type="string">main</XPD:ATTR>
 <XPD:REF name="Owner">vIzhW+ogSkKBsOI68hjOzgAA</XPD:REF>
 <XPD:ATTR name="#Parameters" type="integer">1</XPD:ATTR>
@@ -1832,6 +1879,58 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="#Instances" type="integer">2</XPD:ATTR>
 <XPD:REF name="Instances[0]">M5ExTqejbEqyDbtdXCsaBgAA</XPD:REF>
 <XPD:REF name="Instances[1]">R2tWbkVbQEm7xvIYA2LuowAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="OwnedElements[22]" type="UMLClass" guid="34VW/zI3n0mPQjyAaMp/7AAA">
+<XPD:ATTR name="Name" type="string">CEdoyunTool</XPD:ATTR>
+<XPD:REF name="Namespace">C1QOuPHrrEu0nlxK5T669AAA</XPD:REF>
+<XPD:ATTR name="#Views" type="integer">4</XPD:ATTR>
+<XPD:REF name="Views[0]">UOWkVULSEEqoiUcPO9CxOAAA</XPD:REF>
+<XPD:REF name="Views[1]">tzXe0ZtOYU2m8uquhzWYAgAA</XPD:REF>
+<XPD:REF name="Views[2]">xRlK5Vct7UKTXLpFOFbkrwAA</XPD:REF>
+<XPD:REF name="Views[3]">pJjwx7DHTEu0RFLcv91m5AAA</XPD:REF>
+<XPD:ATTR name="#Operations" type="integer">1</XPD:ATTR>
+<XPD:OBJ name="Operations[0]" type="UMLOperation" guid="ETWOSCJTgk+XpudcWmxoWAAA">
+<XPD:ATTR name="Name" type="string">Dump</XPD:ATTR>
+<XPD:ATTR name="OwnerScope" type="UMLScopeKind">skClassifier</XPD:ATTR>
+<XPD:REF name="Owner">34VW/zI3n0mPQjyAaMp/7AAA</XPD:REF>
+<XPD:ATTR name="#Parameters" type="integer">2</XPD:ATTR>
+<XPD:OBJ name="Parameters[0]" type="UMLParameter" guid="w3EaOF3uqE6w8wETWvhuggAA">
+<XPD:ATTR name="Name" type="string">pData</XPD:ATTR>
+<XPD:ATTR name="TypeExpression" type="string">BYTE*</XPD:ATTR>
+<XPD:REF name="BehavioralFeature">ETWOSCJTgk+XpudcWmxoWAAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="Parameters[1]" type="UMLParameter" guid="YRdTzs6ffU2rfC1Czg4qsAAA">
+<XPD:ATTR name="Name" type="string">nSize</XPD:ATTR>
+<XPD:ATTR name="TypeExpression" type="string">size_t</XPD:ATTR>
+<XPD:REF name="BehavioralFeature">ETWOSCJTgk+XpudcWmxoWAAA</XPD:REF>
+</XPD:OBJ>
+</XPD:OBJ>
+</XPD:OBJ>
+<XPD:OBJ name="OwnedElements[23]" type="UMLClass" guid="dRRuq3+3c0CM+Ji32vaKYwAA">
+<XPD:ATTR name="Name" type="string">CCommand</XPD:ATTR>
+<XPD:REF name="Namespace">C1QOuPHrrEu0nlxK5T669AAA</XPD:REF>
+<XPD:ATTR name="#Views" type="integer">4</XPD:ATTR>
+<XPD:REF name="Views[0]">ULRQ0SB7eEmYZWYgOLde7QAA</XPD:REF>
+<XPD:REF name="Views[1]">g6KOyhV0X0SshvVyIZQj2wAA</XPD:REF>
+<XPD:REF name="Views[2]">m3OWBIkgSk+/+OhtDajvzwAA</XPD:REF>
+<XPD:REF name="Views[3]">3E3c7qRyFk65/RhVCLJ/MwAA</XPD:REF>
+<XPD:ATTR name="#Operations" type="integer">1</XPD:ATTR>
+<XPD:OBJ name="Operations[0]" type="UMLOperation" guid="SOBGLJrIF0uv6UsIUUICTQAA">
+<XPD:ATTR name="Name" type="string">ExcuteCommand</XPD:ATTR>
+<XPD:ATTR name="OwnerScope" type="UMLScopeKind">skClassifier</XPD:ATTR>
+<XPD:REF name="Owner">dRRuq3+3c0CM+Ji32vaKYwAA</XPD:REF>
+<XPD:ATTR name="#Parameters" type="integer">2</XPD:ATTR>
+<XPD:OBJ name="Parameters[0]" type="UMLParameter" guid="cR0AqTPrvEqMAEsDq2fhjQAA">
+<XPD:ATTR name="DirectionKind" type="UMLParameterDirectionKind">pdkReturn</XPD:ATTR>
+<XPD:ATTR name="TypeExpression" type="string">int</XPD:ATTR>
+<XPD:REF name="BehavioralFeature">SOBGLJrIF0uv6UsIUUICTQAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="Parameters[1]" type="UMLParameter" guid="CHvXTgRWWUyQ5edeN5nMrQAA">
+<XPD:ATTR name="Name" type="string">nCmd</XPD:ATTR>
+<XPD:ATTR name="TypeExpression" type="string">int</XPD:ATTR>
+<XPD:REF name="BehavioralFeature">SOBGLJrIF0uv6UsIUUICTQAA</XPD:REF>
+</XPD:OBJ>
+</XPD:OBJ>
 </XPD:OBJ>
 <XPD:ATTR name="#OwnedCollaborationInstanceSets" type="integer">1</XPD:ATTR>
 <XPD:OBJ name="OwnedCollaborationInstanceSets[0]" type="UMLCollaborationInstanceSet" guid="HPWZBoAJ4UevPPJg1YzpLgAA">
@@ -2815,7 +2914,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="DiagramOwner">v+o+FwCzNUCwCcBtFmCQvAAA</XPD:REF>
 <XPD:OBJ name="DiagramView" type="UMLSequenceDiagramView" guid="N1nJ5lvREEaR3OWbzO240QAA">
 <XPD:REF name="Diagram">8d4XCuvhpkmlM6o3Kgg2eAAA</XPD:REF>
-<XPD:ATTR name="#OwnedViews" type="integer">25</XPD:ATTR>
+<XPD:ATTR name="#OwnedViews" type="integer">26</XPD:ATTR>
 <XPD:OBJ name="OwnedViews[0]" type="UMLCombinedFragmentView" guid="FJEko5XKE0ObPZiNKKoyzQAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
@@ -2862,7 +2961,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">216</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">840</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">832</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">945</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">112</XPD:ATTR>
 <XPD:REF name="Model">v1hpghr9TUmD39PlbMNQawAA</XPD:REF>
@@ -2879,7 +2978,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">216</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">860</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">852</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">945</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">92</XPD:ATTR>
 <XPD:REF name="Model">U2TSrmn+fE63bZoTPo/WSQAA</XPD:REF>
@@ -2893,7 +2992,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">220</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">980</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">972</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">944</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">117</XPD:ATTR>
 <XPD:REF name="Model">n156Naxf8E+s4a7NkLxeFwAA</XPD:REF>
@@ -2910,7 +3009,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">220</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1000</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">992</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">944</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">97</XPD:ATTR>
 <XPD:REF name="Model">U2Gpz5FtvkWfVQyUcg29fgAA</XPD:REF>
@@ -2925,7 +3024,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1798</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1204</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">127</XPD:ATTR>
 <XPD:REF name="Model">gELxhKIzVkWf+NLtXHTFxwAA</XPD:REF>
@@ -2938,7 +3037,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1659</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1330</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">140</XPD:ATTR>
 <XPD:REF name="Model">Xz1GXhU/OEWzfUgKZ3YfGAAA</XPD:REF>
@@ -2951,7 +3050,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1539</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1469</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">121</XPD:ATTR>
 <XPD:REF name="Model">FR+n4Lq6jkq37tV9o/cQegAA</XPD:REF>
@@ -2964,7 +3063,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1406</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1589</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">134</XPD:ATTR>
 <XPD:REF name="Model">/zMcQlNxrUeTnA7tRXJPdgAA</XPD:REF>
@@ -2977,7 +3076,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1204</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1722</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">203</XPD:ATTR>
 <XPD:REF name="Model">G/bYMJc8nkuSGo7Vi43diwAA</XPD:REF>
@@ -2990,7 +3089,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">2191</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1924</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">63</XPD:ATTR>
 <XPD:REF name="Model">nYTUR2NnV0+kfozuX/TqcAAA</XPD:REF>
@@ -3003,7 +3102,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">2048</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1986</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">144</XPD:ATTR>
 <XPD:REF name="Model">KLlefb0kXU6H4Kv4Ir89WgAA</XPD:REF>
@@ -3016,7 +3115,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">204</XPD:ATTR>
-<XPD:ATTR name="Top" type="integer">1924</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">2129</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">997</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">125</XPD:ATTR>
 <XPD:REF name="Model">E307wK2Sq0K0jPyWr+kDdwAA</XPD:REF>
@@ -3086,7 +3185,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">872</XPD:ATTR>
 <XPD:ATTR name="Top" type="integer">164</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">70</XPD:ATTR>
-<XPD:ATTR name="Height" type="integer">1089</XPD:ATTR>
+<XPD:ATTR name="Height" type="integer">1325</XPD:ATTR>
 <XPD:REF name="Model">28f0OnupL0aUjB34NqqPYgAA</XPD:REF>
 <XPD:OBJ name="NameCompartment" type="UMLNameCompartmentView" guid="9hhKlnXdS0y9Ut5uSXntvAAA">
 <XPD:OBJ name="NameLabel" type="LabelView" guid="KdeECFQIWEKCnZtg7xagXwAA">
@@ -3110,7 +3209,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">1024</XPD:ATTR>
 <XPD:ATTR name="Top" type="integer">160</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">91</XPD:ATTR>
-<XPD:ATTR name="Height" type="integer">1077</XPD:ATTR>
+<XPD:ATTR name="Height" type="integer">1337</XPD:ATTR>
 <XPD:REF name="Model">UZRzOkGpHESPdxrJswcS4wAA</XPD:REF>
 <XPD:OBJ name="NameCompartment" type="UMLNameCompartmentView" guid="zW/Nj9L9kkeCRXCJQm66PgAA">
 <XPD:OBJ name="NameLabel" type="LabelView" guid="LTYbGeHk8kmz2iuxbkhUlQAA">
@@ -3134,7 +3233,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="Left" type="integer">628</XPD:ATTR>
 <XPD:ATTR name="Top" type="integer">144</XPD:ATTR>
 <XPD:ATTR name="Width" type="integer">80</XPD:ATTR>
-<XPD:ATTR name="Height" type="integer">1097</XPD:ATTR>
+<XPD:ATTR name="Height" type="integer">1357</XPD:ATTR>
 <XPD:REF name="Model">R2tWbkVbQEm7xvIYA2LuowAA</XPD:REF>
 <XPD:OBJ name="NameCompartment" type="UMLNameCompartmentView" guid="5B9NG1pqmEy8smGzkj+ZAQAA">
 <XPD:OBJ name="NameLabel" type="LabelView" guid="8QzLAQXI6Em3X/Rn+4dergAA">
@@ -3764,7 +3863,43 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">29</XPD:ATTR>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="OwnedViews[23]" type="UMLSeqStimulusView" guid="xP7clk20pUG5kQWg79zcHQAA">
+<XPD:OBJ name="OwnedViews[23]" type="UMLSeqStimulusView" guid="mepYDroON0m+bb6Dg/sjMQAA">
+<XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
+<XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
+<XPD:ATTR name="LineStyle" type="LineStyleKind">lsRectilinear</XPD:ATTR>
+<XPD:ATTR name="Points" type="Points">387,1064;661,1064</XPD:ATTR>
+<XPD:REF name="Model">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
+<XPD:REF name="Head">Btk8Q16ji0KKXEh5G2ldewAA</XPD:REF>
+<XPD:REF name="Tail">xkGYk4V+fE6squY7msfr5AAA</XPD:REF>
+<XPD:OBJ name="NameLabel" type="EdgeLabelView" guid="1PnD/W7sg0eBmq8BMg98cAAA">
+<XPD:ATTR name="Alpha" type="real">1.5707963267949</XPD:ATTR>
+<XPD:ATTR name="Distance" type="real">10</XPD:ATTR>
+<XPD:ATTR name="Text" type="string">18 : _findnext()</XPD:ATTR>
+<XPD:REF name="Model">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
+<XPD:REF name="HostEdge">mepYDroON0m+bb6Dg/sjMQAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="StereotypeLabel" type="EdgeLabelView" guid="772R/3e6D0qI8ISDJYPN4QAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+<XPD:ATTR name="Alpha" type="real">1.5707963267949</XPD:ATTR>
+<XPD:ATTR name="Distance" type="real">25</XPD:ATTR>
+<XPD:REF name="Model">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
+<XPD:REF name="HostEdge">mepYDroON0m+bb6Dg/sjMQAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="PropertyLabel" type="EdgeLabelView" guid="4+15k3c730Ofk8rdsd6w+AAA">
+<XPD:ATTR name="Visible" type="boolean">False</XPD:ATTR>
+<XPD:ATTR name="Alpha" type="real">-1.5707963267949</XPD:ATTR>
+<XPD:ATTR name="Distance" type="real">10</XPD:ATTR>
+<XPD:REF name="Model">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
+<XPD:REF name="HostEdge">mepYDroON0m+bb6Dg/sjMQAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="Activation" type="UMLActivationView" guid="kL0gFLo15k6lO97d8qLbLgAA">
+<XPD:ATTR name="Left" type="integer">661</XPD:ATTR>
+<XPD:ATTR name="Top" type="integer">1064</XPD:ATTR>
+<XPD:ATTR name="Width" type="integer">14</XPD:ATTR>
+<XPD:ATTR name="Height" type="integer">29</XPD:ATTR>
+</XPD:OBJ>
+</XPD:OBJ>
+<XPD:OBJ name="OwnedViews[24]" type="UMLSeqStimulusView" guid="xP7clk20pUG5kQWg79zcHQAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="LineStyle" type="LineStyleKind">lsRectilinear</XPD:ATTR>
@@ -3775,7 +3910,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:OBJ name="NameLabel" type="EdgeLabelView" guid="mWkgckyPzEuPeADYbzIhHgAA">
 <XPD:ATTR name="Alpha" type="real">1.5707963267949</XPD:ATTR>
 <XPD:ATTR name="Distance" type="real">10</XPD:ATTR>
-<XPD:ATTR name="Text" type="string">18 : getInstance()</XPD:ATTR>
+<XPD:ATTR name="Text" type="string">19 : getInstance()</XPD:ATTR>
 <XPD:REF name="Model">0r9JSY9FUEOQ1k0KKN6BFAAA</XPD:REF>
 <XPD:REF name="HostEdge">xP7clk20pUG5kQWg79zcHQAA</XPD:REF>
 </XPD:OBJ>
@@ -3800,7 +3935,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="Height" type="integer">29</XPD:ATTR>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:OBJ name="OwnedViews[24]" type="UMLSeqStimulusView" guid="aHpQwbIfg0WN76CpDrPVRAAA">
+<XPD:OBJ name="OwnedViews[25]" type="UMLSeqStimulusView" guid="aHpQwbIfg0WN76CpDrPVRAAA">
 <XPD:ATTR name="LineColor" type="string">clMaroon</XPD:ATTR>
 <XPD:ATTR name="FillColor" type="string">$00B9FFFF</XPD:ATTR>
 <XPD:ATTR name="LineStyle" type="LineStyleKind">lsRectilinear</XPD:ATTR>
@@ -3811,7 +3946,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:OBJ name="NameLabel" type="EdgeLabelView" guid="CrjqL6dojU+RjHI82LjNLgAA">
 <XPD:ATTR name="Alpha" type="real">1.5707963267949</XPD:ATTR>
 <XPD:ATTR name="Distance" type="real">10</XPD:ATTR>
-<XPD:ATTR name="Text" type="string">19 : Send()</XPD:ATTR>
+<XPD:ATTR name="Text" type="string">20 : Send()</XPD:ATTR>
 <XPD:REF name="Model">VyLiXlx1tUaUu41pOJ8YQgAA</XPD:REF>
 <XPD:REF name="HostEdge">aHpQwbIfg0WN76CpDrPVRAAA</XPD:REF>
 </XPD:OBJ>
@@ -3838,7 +3973,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 </XPD:OBJ>
 </XPD:OBJ>
 </XPD:OBJ>
-<XPD:ATTR name="#ParticipatingStimuli" type="integer">19</XPD:ATTR>
+<XPD:ATTR name="#ParticipatingStimuli" type="integer">20</XPD:ATTR>
 <XPD:OBJ name="ParticipatingStimuli[0]" type="UMLStimulus" guid="7fLI93ZaQUGMLBv0CM2YDgAA">
 <XPD:REF name="Sender">WesEA0O4gkmbLZPKmzJigAAA</XPD:REF>
 <XPD:REF name="Receiver">WesEA0O4gkmbLZPKmzJigAAA</XPD:REF>
@@ -4077,7 +4212,21 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="Views[2]">1qpwWrZ8GU+fSlX5jkv58QAA</XPD:REF>
 <XPD:REF name="Views[3]">J37nhI6dhkidub2tIuYBqwAA</XPD:REF>
 </XPD:OBJ>
-<XPD:OBJ name="ParticipatingStimuli[17]" type="UMLStimulus" guid="0r9JSY9FUEOQ1k0KKN6BFAAA">
+<XPD:OBJ name="ParticipatingStimuli[17]" type="UMLStimulus" guid="3U9WzjYfzkqbYR6E/5yUkgAA">
+<XPD:ATTR name="Name" type="string">_findnext</XPD:ATTR>
+<XPD:REF name="Sender">WesEA0O4gkmbLZPKmzJigAAA</XPD:REF>
+<XPD:REF name="Receiver">R2tWbkVbQEm7xvIYA2LuowAA</XPD:REF>
+<XPD:OBJ name="Action" type="UMLCallAction" guid="m/ShJEX++kGHfijz1Cx9PQAA">
+<XPD:REF name="Stimulus">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
+</XPD:OBJ>
+<XPD:REF name="InteractionInstanceSet">v+o+FwCzNUCwCcBtFmCQvAAA</XPD:REF>
+<XPD:ATTR name="#Views" type="integer">4</XPD:ATTR>
+<XPD:REF name="Views[0]">mepYDroON0m+bb6Dg/sjMQAA</XPD:REF>
+<XPD:REF name="Views[1]">1PnD/W7sg0eBmq8BMg98cAAA</XPD:REF>
+<XPD:REF name="Views[2]">772R/3e6D0qI8ISDJYPN4QAA</XPD:REF>
+<XPD:REF name="Views[3]">4+15k3c730Ofk8rdsd6w+AAA</XPD:REF>
+</XPD:OBJ>
+<XPD:OBJ name="ParticipatingStimuli[18]" type="UMLStimulus" guid="0r9JSY9FUEOQ1k0KKN6BFAAA">
 <XPD:REF name="Sender">WesEA0O4gkmbLZPKmzJigAAA</XPD:REF>
 <XPD:REF name="Receiver">UZRzOkGpHESPdxrJswcS4wAA</XPD:REF>
 <XPD:OBJ name="Action" type="UMLCallAction" guid="QLgtUzUa7kqEEte/t0XkiAAA">
@@ -4091,7 +4240,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="Views[2]">rXGpEytTOEOosvpjOYtklwAA</XPD:REF>
 <XPD:REF name="Views[3]">t9En0D6WqkusGMeCwWlG+gAA</XPD:REF>
 </XPD:OBJ>
-<XPD:OBJ name="ParticipatingStimuli[18]" type="UMLStimulus" guid="VyLiXlx1tUaUu41pOJ8YQgAA">
+<XPD:OBJ name="ParticipatingStimuli[19]" type="UMLStimulus" guid="VyLiXlx1tUaUu41pOJ8YQgAA">
 <XPD:REF name="Sender">WesEA0O4gkmbLZPKmzJigAAA</XPD:REF>
 <XPD:REF name="Receiver">UZRzOkGpHESPdxrJswcS4wAA</XPD:REF>
 <XPD:OBJ name="Action" type="UMLCallAction" guid="vpi4UVeYCE2AqyWLAEr1GgAA">
@@ -4276,7 +4425,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="#Views" type="integer">2</XPD:ATTR>
 <XPD:REF name="Views[0]">2WeIL3WMbk2trsGxXCpTcgAA</XPD:REF>
 <XPD:REF name="Views[1]">xkGYk4V+fE6squY7msfr5AAA</XPD:REF>
-<XPD:ATTR name="#SendingStimuli" type="integer">19</XPD:ATTR>
+<XPD:ATTR name="#SendingStimuli" type="integer">20</XPD:ATTR>
 <XPD:REF name="SendingStimuli[0]">7fLI93ZaQUGMLBv0CM2YDgAA</XPD:REF>
 <XPD:REF name="SendingStimuli[1]">gnIswHw3S0+2Z1wtT04V7gAA</XPD:REF>
 <XPD:REF name="SendingStimuli[2]">TLplW1mbNUCjYjGysLW2CQAA</XPD:REF>
@@ -4296,6 +4445,7 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:REF name="SendingStimuli[16]">BTlzUobe5U6n4IZY9e2IygAA</XPD:REF>
 <XPD:REF name="SendingStimuli[17]">0r9JSY9FUEOQ1k0KKN6BFAAA</XPD:REF>
 <XPD:REF name="SendingStimuli[18]">VyLiXlx1tUaUu41pOJ8YQgAA</XPD:REF>
+<XPD:REF name="SendingStimuli[19]">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
 <XPD:ATTR name="#ReceivingStimuli" type="integer">3</XPD:ATTR>
 <XPD:REF name="ReceivingStimuli[0]">7fLI93ZaQUGMLBv0CM2YDgAA</XPD:REF>
 <XPD:REF name="ReceivingStimuli[1]">gnIswHw3S0+2Z1wtT04V7gAA</XPD:REF>
@@ -4336,10 +4486,11 @@ c.与远程桌面交互(鼠标、加锁\解锁)</XPD:ATTR>
 <XPD:ATTR name="#Views" type="integer">2</XPD:ATTR>
 <XPD:REF name="Views[0]">yFnYC1oxHEmMZjMqLPOf4QAA</XPD:REF>
 <XPD:REF name="Views[1]">Btk8Q16ji0KKXEh5G2ldewAA</XPD:REF>
-<XPD:ATTR name="#ReceivingStimuli" type="integer">3</XPD:ATTR>
+<XPD:ATTR name="#ReceivingStimuli" type="integer">4</XPD:ATTR>
 <XPD:REF name="ReceivingStimuli[0]">2vvF0mMHfUmFdyE9r3OQggAA</XPD:REF>
 <XPD:REF name="ReceivingStimuli[1]">nF+6qonu3066CJP/6CLgogAA</XPD:REF>
 <XPD:REF name="ReceivingStimuli[2]">FqEMfjWGv0+F1Y6Qnl4HxwAA</XPD:REF>
+<XPD:REF name="ReceivingStimuli[3]">3U9WzjYfzkqbYR6E/5yUkgAA</XPD:REF>
 </XPD:OBJ>
 </XPD:OBJ>
 </XPD:OBJ>

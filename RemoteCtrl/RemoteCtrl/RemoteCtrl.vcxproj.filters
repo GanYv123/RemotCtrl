@@ -36,6 +36,12 @@
     <ClInclude Include="LockInfoDialog.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="EdoyunTool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RemoteCtrl.cpp">
@@ -48,6 +54,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="LockInfoDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="EdoyunTool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Command.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
