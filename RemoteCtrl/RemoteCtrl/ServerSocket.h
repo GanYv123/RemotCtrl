@@ -79,10 +79,10 @@ private:
 	CPacket m_packet;
 	//
 	CServerSocket();
-	CServerSocket(const CServerSocket&);
+	CServerSocket(const CServerSocket& ss);
 	~CServerSocket();
 	BOOL InitSockEnv();
-	CServerSocket& operator=(const CServerSocket&) {}
+	CServerSocket& operator=(const CServerSocket& ss) {}
 	static CServerSocket* m_instance;
 	static void releaseInstance();
 	class CHelper {
