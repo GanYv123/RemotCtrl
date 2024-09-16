@@ -136,28 +136,6 @@ BOOL CServerSocket::Send(CPacket& pack) {
 	return send(m_client, pack.Data(), pack.size(), 0) > 0;
 }
 
-BOOL CServerSocket::getFilePath(std::string& strPath) {
-	if ((m_packet.sCmd == 2)
-		||(m_packet.sCmd == 3)
-		||(m_packet.sCmd == 4)
-		||(m_packet.sCmd == 9)) 
-	{
-		strPath = m_packet.strData;
-		return TRUE;
-	}
-	return FALSE;
-}
-
-BOOL CServerSocket::getMouseEvent(MOUSEEV& mouse) {
-	if (m_packet.sCmd == 5) {
-		memcpy(&mouse,m_packet.strData.c_str(),sizeof(MOUSEEV));
-		return TRUE;
-	}
-	return FALSE;
-}
-
-CPacket& CServerSocket::getPacket() {return m_packet;}
-
 void CServerSocket::closeClient() { 
 	if (m_client != INVALID_SOCKET) {
 		closesocket(m_client);

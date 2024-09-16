@@ -18,9 +18,6 @@ protected:
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(CPacket& pack);
-	BOOL getFilePath(std::string& strPath);
-	BOOL getMouseEvent(MOUSEEV& mouse);
-	CPacket& getPacket();
 	void closeClient();
 private:
 	SOCK_CALLBACK m_callback;

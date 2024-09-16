@@ -136,7 +136,7 @@ BOOL CRemoteClientDlg::OnInitDialog() {
 	UpdateData();
 	//m_server_address = 0x7f000001;//127.0.0.1
 	m_server_address = 0xC0A88581;//127.0.0.1
-	m_nPort = _T("2323");
+	m_nPort = _T("2233");
 	UpdateData(FALSE);
 	m_dlgStatus.Create(IDD_DLG_STATUS, this);
 	m_dlgStatus.ShowWindow(SW_HIDE);
@@ -206,17 +206,20 @@ void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
 	{
 		if (drivers[i] == ',') {
 			dr += ":";
-			{
-				CString cstrDr(dr.c_str());
-				HTREEITEM hTemp = m_Tree.InsertItem(cstrDr, TVI_ROOT, TVI_LAST);
-				m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
-			}
+			CString cstrDr(dr.c_str());
+			HTREEITEM hTemp = m_Tree.InsertItem(cstrDr, TVI_ROOT, TVI_LAST);
+			m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
 			dr.clear();
 			continue;
 		}
 		dr += drivers[i];
 	}
-
+	//处理只有一个分区的特殊情况
+	if (dr.size() > 0) {
+		dr += ":";
+		CString cstrDr(dr.c_str());
+		HTREEITEM hTemp = m_Tree.InsertItem(cstrDr, TVI_ROOT, TVI_LAST);
+	}
 }
 
 void CRemoteClientDlg::threadEntryForWatchData(void* arg) {
