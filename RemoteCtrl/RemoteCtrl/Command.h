@@ -4,7 +4,7 @@
 #include <atlimage.h>
 #include <direct.h>
 #include "EdoyunTool.h"
-#include "ServerSocket.h"
+#include "Packet.h"
 #include <io.h>
 #include <list>
 #include "LockInfoDialog.h"
@@ -13,10 +13,23 @@ class CCommand {
 public:
 	CCommand();
 	~CCommand() {}
-	int ExcuteCommand(int nCmd);
+	int ExcuteCommand(int nCmd, std::list<CPacket>& lstPacket, CPacket& inPacket);
 
+	static void RunCommand(void* arg, int status, std::list<CPacket>& lstPacket, CPacket& inPacket) {
+		CCommand* thiz = (CCommand*)arg;
+		int ret = thiz->ExcuteCommand(status, lstPacket, inPacket);
+		if (status > 0) {
+			if (ret != 0) {
+				TRACE("执行命令失败,%d ret = %d\r\n", status, ret);
+			}
+		}
+		else {
+			MessageBox(NULL, _T("无法正常接入用户，自动重试"), _T("接入用户失败"), MB_OK | MB_ICONERROR);
+			exit(0);
+		}
+	}
 protected:
-	typedef int (CCommand::* CMDFUNC)();//成员函数指针
+	typedef int (CCommand::* CMDFUNC)(std::list<CPacket>& lstPacket, CPacket& inPacket);//成员函数指针
 	std::map<int, CMDFUNC> m_mapFunction;//命令号到功能的映射
 	CLockInfoDialog dlg;
 	unsigned threadId;
@@ -27,7 +40,7 @@ protected:
 		_endthreadex(0);
 		return 0;
 	}
-	
+
 	void threadLockDlgMain() {
 		TRACE("%s(%d) %d\r\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 		dlg.Create(IDD_DIALOG_INFO, NULL);
@@ -72,7 +85,7 @@ protected:
 		dlg.DestroyWindow();
 	}
 
-	int MakeDriverInfo(){//1==>A 2==>B ...
+	int MakeDriverInfo(std::list<CPacket>& lstPacket, CPacket& inPacket) {//1==>A 2==>B ...
 		std::string result;
 		for (int i = 1; i <= 26; i++) { //改变当前驱动
 			if (_chdrive(i) == 0) {
@@ -82,27 +95,19 @@ protected:
 				}
 			}
 		}
-		CPacket pack(1, (BYTE*)result.c_str(), result.size());
-		CEdoyunTool::Dump((BYTE*)pack.Data(), pack.size());
-		CServerSocket::getInstance()->Send(pack);
+		lstPacket.push_back(CPacket(1, (BYTE*)result.c_str(), result.size()));
 		return 0;
 	}
 
 
-	int MakeDirectoryInfo() {
-		std::string strPath;
+	int MakeDirectoryInfo(std::list<CPacket>& lstPacket, CPacket& inPacket) {
 		//std::list<FILEINFO> lstFileInfos;
-
-		if (CServerSocket::getInstance()->getFilePath(strPath) == FALSE) {
-			OutputDebugString(_T("当前命令不是获取文件列表，命令解析错误!\n"));
-			return -1;
-		}
-		TRACE("MakeDirectoryInfo()->strPath:%s\n", strPath.c_str());
+		std::string strPath = inPacket.strData;
+		//TRACE("MakeDirectoryInfo()->strPath:%s\n", strPath.c_str());
 		if (_chdir(strPath.c_str()) != 0) { //切换目录失败
 			FILEINFO finfo;
 			finfo.HasNext = FALSE;
-			CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
-			CServerSocket::getInstance()->Send(pack);
+			lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
 			OutputDebugString(_T("没有权限访问目录!\r\n"));
 			return -2;
 		}
@@ -114,8 +119,8 @@ protected:
 			OutputDebugString(_T("没有找到任何文件!"));
 			FILEINFO finfo;
 			finfo.HasNext = FALSE;
-			CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
-			CServerSocket::getInstance()->Send(pack);
+			lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
+
 			return -3;
 		}
 
@@ -125,8 +130,7 @@ protected:
 			finfo.IsDirectory = ((fdata.attrib & _A_SUBDIR) != 0);
 			memcpy(finfo.szFileName, fdata.name, strlen(fdata.name));
 			TRACE("%s\r\n", finfo.szFileName);
-			CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
-			CServerSocket::getInstance()->Send(pack);
+			lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
 			SEND_FILE_CNT++;
 
 		} while (!_findnext(hfind, &fdata));
@@ -135,31 +139,26 @@ protected:
 
 		FILEINFO finfo;
 		finfo.HasNext = FALSE;
-		CPacket pack(2, (BYTE*)&finfo, sizeof(finfo));
-		CServerSocket::getInstance()->Send(pack);
+		lstPacket.push_back(CPacket(2, (BYTE*)&finfo, sizeof(finfo)));
 
 		return 0;
 	}
 
-	int RunFile() {
-		std::string strPath;
-		CServerSocket::getInstance()->getFilePath(strPath);
+	int RunFile(std::list<CPacket>& lstPacket, CPacket& inPacket) {
+		std::string strPath = inPacket.strData;
 		ShellExecuteA(NULL, NULL, strPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
-		CPacket pack(3, NULL, 0);
-		CServerSocket::getInstance()->Send(pack);
+		lstPacket.push_back(CPacket(3, NULL, 0));
 		return 0;
 	}
 
-	int DownloadFile() {
-		std::string strPath;
-		CServerSocket::getInstance()->getFilePath(strPath);
+	int DownloadFile(std::list<CPacket>& lstPacket, CPacket& inPacket) {
+		std::string strPath = inPacket.strData;
 		FILE* pFile = nullptr;
 		errno_t err = fopen_s(&pFile, strPath.c_str(), "rb");
 		long long data = 0;
 
 		if (err != 0) {
-			CPacket pack(4, (BYTE*)&data, sizeof(long long));
-			CServerSocket::getInstance()->Send(pack);
+			lstPacket.push_back(CPacket(4, (BYTE*)&data, sizeof(long long)));
 			return -1;
 		}
 
@@ -167,142 +166,130 @@ protected:
 			/*获取文件大小*/
 			fseek(pFile, 0, SEEK_END);
 			data = _ftelli64(pFile);
-			CPacket head(4, (BYTE*)&data, sizeof(long long));
-			CServerSocket::getInstance()->Send(head);
+			lstPacket.push_back(CPacket(4, (BYTE*)&data, sizeof(long long)));
 			fseek(pFile, 0, SEEK_SET);
-
 			char buffer[1024] = "";
 			size_t rlen = 0;
 			do {
 				rlen = fread(buffer, 1, 1024, pFile);
-				CPacket pack(4, (BYTE*)buffer, rlen);
-				CServerSocket::getInstance()->Send(pack);
+				lstPacket.push_back(CPacket(4, (BYTE*)buffer, rlen));
 			} while (rlen >= 1024);
 			fclose(pFile);
 		}
 
-		CPacket pack(4, NULL, 0);
-		CServerSocket::getInstance()->Send(pack);
+		lstPacket.push_back(CPacket(4, NULL, 0));
 		return 0;
 	}
 
-	int MouseEvent() {
+	int MouseEvent(std::list<CPacket>& lstPacket, CPacket& inPacket) {
 		MOUSEEV mouse;
-		if (CServerSocket::getInstance()->getMouseEvent(mouse)) {
-
-			DWORD nFlags = 0;
-			//if(nFlags)
-			switch (mouse.nButton) {
-			case 0:	//左键
-				nFlags = 1;
-				break;
-			case 1:	//右键
-				nFlags = 2;
-				break;
-			case 2:	//中
-				nFlags = 4;
-				break;
-			case 4:	//没有按键
-				nFlags = 8;
-				break;
-			default:
-				break;
-			}
-
-			if (nFlags != 8)SetCursorPos(mouse.ptXY.x, mouse.ptXY.y);
-
-			switch (mouse.nAction) {
-			case 0:	//单击
-				nFlags |= 0x10;
-				break;
-			case 1:	//双击
-				nFlags |= 0x20;
-				break;
-			case 2:	//按下
-				nFlags |= 0x40;
-				break;
-			case 3:	//放开
-				nFlags |= 0x80;
-				break;
-			default:
-				break;
-			}
-			switch (nFlags) {
-				/*------------------  左 键 操 作  ------------------------*/
-
-			case 0x21:	//左键双击
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
-				//GetMessageExtraInfo() 获取额外信息
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
-				//无 break 往下执行一次单击
-			case 0x11:	//左键单击
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-			case 0x41:	//左键按下
-				mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
-				break;
-			case 0x81:	//左键放开
-				mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-				/*------------------  右 键 操 作  ------------------------*/
-			case 0x22:	//右键双击
-				mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
-				mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
-			case 0x12:	//右键单击
-				mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
-				mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-			case 0x42:	//右键按下
-				mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-			case 0x82:	//右键放开
-				mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
-				break;
-				/*------------------  中 键 操 作  ------------------------*/
-
-
-			case 0x24:	//中键双击
-				mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
-				mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
-
-			case 0x14:	//中键单击
-				mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
-				mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-			case 0x44:	//中键按下
-				mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-			case 0x84:	//中键放开
-				mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
-				break;
-
-				/*------------------  鼠 标 移 动  ------------------------*/
-			case 0x08:
-				mouse_event(MOUSEEVENTF_MOVE, mouse.ptXY.x, mouse.ptXY.y, 0, GetMessageExtraInfo());
-				break;
-
-			default:
-				break;
-			}
-			CPacket pack(4, NULL, 0);
-			CServerSocket::getInstance()->Send(pack);
-		}
-		else {
-			OutputDebugString(_T("获取鼠标操作参数失败！"));
-			return -1;
+		memcpy(&mouse, inPacket.strData.c_str(), sizeof(MOUSEEV));
+		DWORD nFlags = 0;
+		//if(nFlags)
+		switch (mouse.nButton) {
+		case 0:	//左键
+			nFlags = 1;
+			break;
+		case 1:	//右键
+			nFlags = 2;
+			break;
+		case 2:	//中
+			nFlags = 4;
+			break;
+		case 4:	//没有按键
+			nFlags = 8;
+			break;
+		default:
+			break;
 		}
 
+		if (nFlags != 8)SetCursorPos(mouse.ptXY.x, mouse.ptXY.y);
+
+		switch (mouse.nAction) {
+		case 0:	//单击
+			nFlags |= 0x10;
+			break;
+		case 1:	//双击
+			nFlags |= 0x20;
+			break;
+		case 2:	//按下
+			nFlags |= 0x40;
+			break;
+		case 3:	//放开
+			nFlags |= 0x80;
+			break;
+		default:
+			break;
+		}
+		switch (nFlags) {
+			/*------------------  左 键 操 作  ------------------------*/
+
+		case 0x21:	//左键双击
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
+			//GetMessageExtraInfo() 获取额外信息
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
+			//无 break 往下执行一次单击
+		case 0x11:	//左键单击
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+		case 0x41:	//左键按下
+			mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, GetMessageExtraInfo());
+			break;
+		case 0x81:	//左键放开
+			mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+			/*------------------  右 键 操 作  ------------------------*/
+		case 0x22:	//右键双击
+			mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
+			mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
+		case 0x12:	//右键单击
+			mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
+			mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+		case 0x42:	//右键按下
+			mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+		case 0x82:	//右键放开
+			mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, GetMessageExtraInfo());
+			break;
+			/*------------------  中 键 操 作  ------------------------*/
+
+
+		case 0x24:	//中键双击
+			mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
+			mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
+
+		case 0x14:	//中键单击
+			mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
+			mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+		case 0x44:	//中键按下
+			mouse_event(MOUSEEVENTF_MIDDLEDOWN, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+		case 0x84:	//中键放开
+			mouse_event(MOUSEEVENTF_MIDDLEUP, 0, 0, 0, GetMessageExtraInfo());
+			break;
+
+			/*------------------  鼠 标 移 动  ------------------------*/
+		case 0x08:
+			mouse_event(MOUSEEVENTF_MOVE, mouse.ptXY.x, mouse.ptXY.y, 0, GetMessageExtraInfo());
+			break;
+
+		default:
+			break;
+		}
+		lstPacket.push_back(CPacket(5, NULL, 0));
 		return 0;
 	}
 
-	int SendScreen() {
+	int SendScreen(std::list<CPacket>& lstPacket, CPacket& inPacket) {
 		CImage screen;
 		HDC hScreen = ::GetDC(NULL);//获取屏幕句柄
 		int nBitPerpixel = GetDeviceCaps(hScreen, BITSPIXEL);//24 rgb888
@@ -325,8 +312,8 @@ protected:
 			pStream->Seek(bg, STREAM_SEEK_SET, NULL);
 			PBYTE pData = (PBYTE)GlobalLock(hMem);
 			size_t nSize = GlobalSize(hMem); //2.5k -> 457494
-			CPacket pack(6, (BYTE*)pData, nSize);
-			CServerSocket::getInstance()->Send(pack);
+			lstPacket.push_back(CPacket(6, (BYTE*)pData, nSize));
+
 			GlobalUnlock(hMem);
 		}
 		pStream->Release();
@@ -335,44 +322,36 @@ protected:
 		return 0;
 	}
 
-	int LockMachine() {
+	int LockMachine(std::list<CPacket>& lstPacket, CPacket& inPacket) {
 		if ((dlg.m_hWnd == NULL) || (dlg.m_hWnd == INVALID_HANDLE_VALUE)) {
 			//_beginthread(threadLockDlg, 0, NULL);
 			_beginthreadex(NULL, 0, &CCommand::threadLockDlg, this, 0, &threadId);
 			TRACE("threadId = %d\r\n", threadId);
 		}
-
-		CPacket pack(7, NULL, 0);
-		CServerSocket::getInstance()->Send(pack);
-
+		lstPacket.push_back(CPacket(7, NULL, 0));
 		return 0;
 	}
 
-	int UnlockMachine() {
+	int UnlockMachine(std::list<CPacket>& lstPacket, CPacket& inPacket) {
 		//dlg.SendMessage(WM_KEYDOWN, 0x41, 0X01E0001);
 		//::SendMessage(dlg.m_hWnd,WM_KEYDOWN,0X41, 0X01E0001);//Windows消息泵只能发同一线程
 		::PostThreadMessage(threadId, WM_KEYDOWN, 0x41, 0);
-		CPacket pack(8, NULL, 0);
-		CServerSocket::getInstance()->Send(pack);
+		lstPacket.push_back(CPacket(8, NULL, 0));
 		return 0;
 	}
 
-	int TestConnect() {
-		CPacket pack(22233, NULL, 0);
-		CServerSocket::getInstance()->Send(pack);
+	int TestConnect(std::list<CPacket>& lstPacket, CPacket& inPacket) {
+		lstPacket.push_back(CPacket(22233, NULL, 0));
 		return 0;
 	}
 
-	int deleteLocalFile() {
-		std::string strPath;
-		CServerSocket::getInstance()->getFilePath(strPath);
+	int deleteLocalFile(std::list<CPacket>& lstPacket, CPacket& inPacket) {
+		std::string strPath = inPacket.strData;
 		TCHAR sPath[MAX_PATH] = _T("");
 		//mbstowcs(sPath,strPath.c_str(),strPath.size());
 		MultiByteToWideChar(CP_ACP, 0, strPath.c_str(), strPath.size(), sPath, sizeof(sPath) / sizeof(TCHAR));
 		BOOL bRet = DeleteFileA(strPath.c_str());
-		CPacket pack(9, NULL, 0);
-		BOOL ret = CServerSocket::getInstance()->Send(pack);
-		TRACE("DeleteFile ret = %d\r\n", ret);
+		lstPacket.push_back(CPacket(9, NULL, 0));
 		return 0;
 	}
 };

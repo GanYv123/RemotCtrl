@@ -28,25 +28,53 @@ CServerSocket* CServerSocket::getInstance() {
 	return m_instance;
 }
 
-BOOL CServerSocket::initSocket() {
+BOOL CServerSocket::initSocket(short port) {
 	// TODO: 1.socket bind listen accept read/write close;
 	if (m_serv_socket == -1) { return FALSE; }
 	SOCKADDR_IN serv_adr;
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family = AF_INET;
 	serv_adr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-	serv_adr.sin_port = htons(2323);
+	serv_adr.sin_port = htons(port);
 	//绑定监听
 	//TODO:校验
 	if (bind(m_serv_socket, (SOCKADDR*)&serv_adr, sizeof(serv_adr)) == -1) {
 		return FALSE;
 	}
-
 	if (listen(m_serv_socket, 1) == -1) {
 		return FALSE;
 	}
+
 	return TRUE;
 
+}
+
+int CServerSocket::Run(SOCK_CALLBACK callback, void* arg, short port) {
+	bool ret = initSocket(port);
+	if (ret == false) return -1;
+	std::list<CPacket> lstPackets;
+	m_callback = callback;
+	m_arg = arg;
+	int count = 0;
+	while (true) {
+		if (AcceptClient() == false) {
+			if (count >= 3) {
+				return -2;
+			}
+			count++;
+		}
+		int ret = DealCommand();
+		if (ret > 0) {
+			m_callback(m_arg, ret,lstPackets,m_packet);
+			while (lstPackets.size() > 0) {
+				Send(lstPackets.front());
+				lstPackets.pop_front();
+			}
+		}
+		closeClient();
+	}
+
+	return 0;
 }
 
 BOOL CServerSocket::AcceptClient() {
@@ -130,7 +158,12 @@ BOOL CServerSocket::getMouseEvent(MOUSEEV& mouse) {
 
 CPacket& CServerSocket::getPacket() {return m_packet;}
 
-void CServerSocket::closeClient() { closesocket(m_client); m_client = INVALID_SOCKET;};
+void CServerSocket::closeClient() { 
+	if (m_client != INVALID_SOCKET) {
+		closesocket(m_client);
+		m_client = INVALID_SOCKET;
+	}
+}
 
 
 /**
@@ -167,118 +200,3 @@ CServerSocket::CHelper::~CHelper() {
 	CServerSocket::releaseInstance();
 }
 
-/**
- * 构造函数
- * 初始化包成员变量
- */
-CPacket::CPacket() :sHead(0), nLength(0), sCmd(0), sSum(0) {}
-//复制构造函数
-CPacket::CPacket(const CPacket& pack) {
-	sHead = pack.sHead;
-	nLength = pack.nLength;
-	sCmd = pack.sCmd;
-	strData = pack.strData;
-	sSum = pack.sSum;
-}
-
-/**
- * @argument:
- * nSize:数据的字节大小
- */
-CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0), sSum(0) 
-{
-	size_t i = 0;
-	for (; i < nSize; i++) {
-		if (*(WORD*)(pData + i) == 0xFEFF) { //校验包头
-			sHead = *(WORD*)(pData + i);
-			i += 2;//一个WORD 2byte
-			break;
-		}
-	}
-	if (i + 8 > nSize) { //解析不成功 length + cmd +sum
-		nSize = 0;
-		return;/*大小不完整的包*/
-	}
-
-	nLength = *(DWORD*)(pData + i);
-	i += 4;
-	/*- - -*/
-	//此处 i = length 之前的字节数
-	if (nLength + i > nSize) { //包没完全接收到，有残缺
-		nSize = 0;
-		return;
-	}
-
-	sCmd = *(WORD*)(pData + i);
-	i += 2;
-	/*- - -*/
-	if (nLength > 4) {
-		strData.resize(nLength - 2 - 2);
-		memcpy((void*)strData.c_str(), pData + i, nLength - 4);
-		i += nLength - 4;
-	}
-	/*- - -*/
-	sSum = *(WORD*)(pData + i);
-	i += 2;
-	WORD sum = 0;
-	for (size_t j = 0; j < strData.size(); j++) {
-		sum += (BYTE(strData[j]) & 0xFF);
-	}
-	if (sum == sSum) {//解析成功
-		nSize = i;
-		return;
-		//FFFE 0900 0000 0100 432C442C46 2501
-	}
-	nSize = 0;
-	
-}
-
-CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
-	sHead = 0xFEFF;
-	nLength = nSize + 4;//数据长度 = cmd + 校验
-	sCmd = nCmd;
-	if (nSize > 0) {
-		strData.resize(nSize);
-		memcpy((void*)strData.c_str(), pData, nSize);
-	}
-	else {
-		strData.clear();
-	}
-	sSum = 0;
-	for (size_t j = 0; j < strData.size(); j++) {
-		sSum += (BYTE(strData[j]) & 0xFF);
-	}
-}
-
-CPacket::~CPacket() {
-}
-
-CPacket& CPacket::operator=(const CPacket& pack) {
-	if (this == &pack) return *this;
-	sHead = pack.sHead;
-	nLength = pack.nLength;
-	sCmd = pack.sCmd;
-	strData = pack.strData;
-	sSum = pack.sSum;
-	return *this;
-}
-
-int CPacket::size() {
-	return nLength + 6;
-}
-
-const char* CPacket::Data() {
-	strOut.resize(nLength + 6);
-	BYTE* pData = (BYTE*)strOut.c_str();
-	*(WORD*)pData = sHead;
-	pData += 2;
-	*(DWORD*)pData = nLength;
-	pData += 4;
-	*(WORD*)pData = sCmd;
-	pData += 2;
-	memcpy(pData,strData.c_str(),strData.size());
-	pData += strData.size();
-	*(WORD*)pData = sSum;
-	
-	return strOut.c_str();
-}

@@ -1,70 +1,19 @@
 #pragma once
 
 #include "pch.h"
+#include <list>
+#include "Packet.h"
 #include "framework.h"
 
-/* 用于数据的 包、帧 */
-#pragma pack(push)
-#pragma pack(1)
-
-typedef struct file_info {
-	file_info() {
-		IsInvalid = FALSE;
-		IsDirectory = -1;
-		HasNext = TRUE;
-		memset(szFileName, 0, sizeof(szFileName));
-	}
-	BOOL IsInvalid;  //是否为失效文件
-	BOOL IsDirectory;//是否为目录
-	BOOL HasNext;	 //是否还有后续文件
-	char szFileName[256];
-
-}FILEINFO, * PFILEINFO;
-
-
-class CPacket {
-public:
-	/*函数*/
-	CPacket();
-	CPacket(const CPacket& packet);
-	CPacket(const BYTE* pData,size_t& nSize);
-	CPacket(WORD nCmd,const BYTE* pData,size_t nSize);
-
-	~CPacket();
-	CPacket& operator=(const CPacket& pack);
-
-	int size();
-	const char* Data();
-
-	/*包 变 量*/
-	WORD sHead;			//固定位FEFF
-	DWORD nLength;		//包长度：控制命令 到 校验 结束
-	WORD sCmd;			//控制命令
-	std::string strData;//包数据
-	WORD sSum;			//和校验
-	std::string strOut; //整包数据
-};
-#pragma pack(pop)
-
-typedef struct MouseEvent 
-{
-	MouseEvent() {
-		nAction = 0;
-		nButton = -1;
-		ptXY.x = 0;
-		ptXY.y = 0;
-	}
-
-	WORD nAction;	//点击 移动 双击
-	WORD nButton;	//左键右键中键
-	POINT ptXY;		//坐标
-}MOUSEEV,*PMOUSEEV;
-
+typedef void(*SOCK_CALLBACK)(void* arg,int status,std::list<CPacket>& lstPacket,CPacket& inPacket);
 
 class CServerSocket {
 public:
 	static CServerSocket* getInstance();
-	BOOL initSocket();
+	int Run(SOCK_CALLBACK callback, void* arg, short port = 2233);
+
+protected:
+	BOOL initSocket(short port);
 	BOOL AcceptClient();
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
@@ -74,6 +23,8 @@ public:
 	CPacket& getPacket();
 	void closeClient();
 private:
+	SOCK_CALLBACK m_callback;
+	void* m_arg;
 	SOCKET m_serv_socket;
 	SOCKET m_client;
 	CPacket m_packet;
