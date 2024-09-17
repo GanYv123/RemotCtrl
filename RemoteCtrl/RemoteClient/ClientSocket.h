@@ -81,7 +81,7 @@ private:
 	CClientSocket(const CClientSocket&);
 	~CClientSocket();
 	BOOL InitSockEnv();
-	CClientSocket& operator=(const CClientSocket&) {}
+	CClientSocket& operator=(const CClientSocket&ss) {}
 	static CClientSocket* m_instance;
 	static void releaseInstance();
 	class CHelper {

@@ -228,9 +228,9 @@ void CWatchDialog::OnStnClickedWatch() {
 }
 
 
-void CWatchDialog::OnOK() {
-	//CDialog::OnOK();
-}
+//void CWatchDialog::OnOK() {
+//	//CDialog::OnOK();
+//}
 
 /// <summary>
 /// 锁机
