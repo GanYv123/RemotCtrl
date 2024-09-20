@@ -29,29 +29,12 @@ public:
 private:
 	CImage m_image;//缓存
 	BOOL m_isFull;//缓存是否满 true->有 false->无
-	BOOL m_isClosed;//监视是否关闭
 private:
-	static void threadEntryForWatchData(void* arg);
-	void threadWatchData();
-	static void threadEntryForDownFile(void* arg);
-	void threadDownFile();
 	void LoadFileCurrent();
 	CString GetPath(HTREEITEM hTree);
 	void DeleteTreeChildrenItem(HTREEITEM);
 	void LoadFileInfo();
-	/**
- * 1.查看磁盘分区
- * 2.查看指定目录文件
- * 3.打开文件
- * 4.下载文件
- * 9.删除文件
- * 5.鼠标操作
- * 6.发送屏幕内容
- * 7.锁机
- * 8.解锁
- * 返回值是命令号
- */
-	int sendCommandPacket(int nCmd, BOOL bAutoClose = TRUE, BYTE* pData = NULL, size_t nLength = 0);
+
 	// 实现
 
 protected:
@@ -80,4 +63,6 @@ public:
 	afx_msg void OnRunFile();
 	afx_msg LRESULT OnSendPacket(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnBnClickedBtnStartWatch();
+	afx_msg void OnIpnFieldchangedIpaddressServ(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnEnChangeEditPort();
 };

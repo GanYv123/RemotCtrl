@@ -2,7 +2,7 @@
 #include "ClientSocket.h"
 #define BUFFER_SIZE 2048000
 
-CClientSocket::CClientSocket() {
+CClientSocket::CClientSocket() :m_nIP(INADDR_ANY), m_nPort(0) {
 	m_sock = INVALID_SOCKET;
 	if (InitSockEnv() == FALSE) {
 		MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置"), _T("初始化套接字错误"), MB_OK | MB_ICONERROR);
@@ -15,6 +15,8 @@ CClientSocket::CClientSocket() {
 
 CClientSocket::CClientSocket(const CClientSocket& ss) {
 	m_sock = ss.m_sock;
+	m_nIP = ss.m_nIP;
+	m_nPort = ss.m_nPort;
 }
 
 CClientSocket::~CClientSocket() {
@@ -52,15 +54,15 @@ std::string GetErrorInfo(int wsaErrCode) {
 }
 
 
-BOOL CClientSocket::initSocket(int nIP,int nPort) {
+BOOL CClientSocket::initSocket() {
 	if (m_sock != INVALID_SOCKET) CloseSocket();
 	m_sock = socket(PF_INET, SOCK_STREAM, 0);
 	if (m_sock == -1) { return FALSE; }
 	SOCKADDR_IN serv_adr;
 	memset(&serv_adr, 0, sizeof(serv_adr));
 	serv_adr.sin_family = AF_INET;
-	serv_adr.sin_addr.S_un.S_addr = htonl(nIP);
-	serv_adr.sin_port = htons(nPort);
+	serv_adr.sin_addr.S_un.S_addr = htonl(m_nIP);
+	serv_adr.sin_port = htons(m_nPort);
 	//#pragma warning(push)
 	//#pragma warning(suppress : 4996) //inet_addr
 	//	serv_adr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");//0x0100007f
@@ -121,9 +123,11 @@ BOOL CClientSocket::Send(const char* pData, int nSize) {
 	return send(m_sock, pData, nSize, 0) > 0;
 }
 
-BOOL CClientSocket::Send(CPacket& pack) {
+BOOL CClientSocket::Send(const CPacket& pack) {
 	if (m_sock == -1) return FALSE;
-	return send(m_sock, pack.Data(), pack.size(), 0) > 0;
+	std::string strOut;
+	pack.Data(strOut);
+	return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;
 }
 
 BOOL CClientSocket::getFilePath(std::string& strPath) {
@@ -281,7 +285,7 @@ int CPacket::size() {
 	return nLength + 6;
 }
 
-const char* CPacket::Data() {
+const char* CPacket::Data(std::string& strOut) const {
 	strOut.resize(nLength + 6);
 	BYTE* pData = (BYTE*)strOut.c_str();
 	*(WORD*)pData = sHead;

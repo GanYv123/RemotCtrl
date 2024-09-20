@@ -185,6 +185,7 @@
   <ItemGroup>
     <ClInclude Include="ClientController.h" />
     <ClInclude Include="ClientSocket.h" />
+    <ClInclude Include="EdoyunTool.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RemoteClient.h" />

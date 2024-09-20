@@ -20,7 +20,7 @@ public:
 	CPacket& operator=(const CPacket& pack);
 
 	int size();
-	const char* Data();
+	const char* Data(std::string& strOut)const;
 
 	/*包 变 量*/
 	WORD sHead;			//固定位FEFF
@@ -28,7 +28,6 @@ public:
 	WORD sCmd;			//控制命令
 	std::string strData;//包数据
 	WORD sSum;			//和校验
-	std::string strOut; //整包数据
 };
 #pragma pack(pop)
 
@@ -63,16 +62,22 @@ typedef struct MouseEvent {
 class CClientSocket {
 public:
 	static CClientSocket* getInstance();
-	BOOL initSocket(int nIP, int nPort);
+	BOOL initSocket();
 	void Dump(BYTE* pData, size_t nSize);
 	int DealCommand();
 	BOOL Send(const char* pData, int nSize);
-	BOOL Send(CPacket& pack);
+	BOOL Send(const CPacket& pack);
 	BOOL getFilePath(std::string& strPath);
 	BOOL getMouseEvent(MOUSEEV& mouse);
 	CPacket& getPacket();
 	void CloseSocket();
+	void UpdateAddress(int nIP,int nPort) {
+		m_nIP = nIP;
+		m_nPort = nPort;
+	}
 private:
+	int m_nIP;//地址
+	int m_nPort;//端口
 	SOCKET m_sock;
 	CPacket m_packet;
 	std::vector<char> m_buffer;
