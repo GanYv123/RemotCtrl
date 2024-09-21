@@ -93,8 +93,8 @@ protected:
 
 private:
 	typedef struct MsgInfo {
-		MSG msg;
-		LRESULT result;
+		MSG msg; //发送MSG
+		LRESULT result; //命令执行的返回值
 
 		MsgInfo(MSG m) {
 			result = 0;

@@ -222,7 +222,6 @@ void CClientController::threadFunc() {
 unsigned int __stdcall CClientController::threadEntry(void* arg) {
 	CClientController* thiz = (CClientController*)arg;
 	thiz->threadFunc();
-
 	_endthreadex(0);
 	return 0;
 }

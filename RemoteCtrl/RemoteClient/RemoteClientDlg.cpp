@@ -277,7 +277,8 @@ void CRemoteClientDlg::LoadFileInfo() {
 	CStringA strPathA(strPath);
 	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength());
 #else
-	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
+	int nCmd = CClientController::getInstance()->SendCommandPacket(
+		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
 #endif //#ifdef _UNICODE
 
 	PFILEINFO pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
