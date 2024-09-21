@@ -22,10 +22,14 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
+	BOOL m_isFull;//缓存是否满 true->有 false->无
 	DECLARE_MESSAGE_MAP()
 public:
+	BOOL isFull() const { return m_isFull; }
+	void setImageStatus(BOOL isFull = FALSE) {
+		m_isFull = isFull;
+	}
 	CPoint UserPoint2RemoteScreenPoint(CPoint& point, BOOL isScreen = FALSE);
-
 	virtual BOOL OnInitDialog();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	// 屏幕图片显示

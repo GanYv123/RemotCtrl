@@ -50,43 +50,15 @@ public:
 * 6.发送屏幕内容
 * 7.锁机
 * 8.解锁
+* int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0
 * 返回值是命令号
 */
-	int SendCommandPacket(int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0) {
-		CClientSocket* pClient = CClientSocket::getInstance();
-		if (pClient->initSocket() == false) {
-			return false;
-		}
-		pClient->Send(CPacket(nCmd, pData, nLength));
-		int cmd = DealCommand();
-		TRACE("ack:%d\r\n", cmd);
-		if (bAutoClose)
-			CloseSocket();
-		return cmd;
-	}
+	int SendCommandPacket(int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0);
 	int GetImage(CImage& image) {
 		CClientSocket* pClient = CClientSocket::getInstance();
 		return CEdoyunTool::Byte2Image(image, pClient->getPacket().strData);
 	}
-	int DownFile(CString strPath) {
-		CFileDialog dlg(FALSE, _T("*"), strPath, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, NULL, &m_remoteDlg);
-		if (dlg.DoModal() == IDOK) {
-			m_strRemote = strPath;
-			m_strLocal = dlg.GetPathName();
-
-			m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
-			//检测线程是否被创建
-			if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT) {
-				return -1;
-			}
-			m_remoteDlg.BeginWaitCursor();
-			m_statusDlg.m_info.SetWindowText(_T("命令正在执行中！..."));
-			m_statusDlg.ShowWindow(SW_SHOW);
-			m_statusDlg.CenterWindow(&m_remoteDlg);
-			m_statusDlg.SetActiveWindow();
-		}
-		return 0;
-	}
+	int DownFile(CString strPath);
 	void StartWatchScreen();
 protected:
 	void threadWatchScreen();
@@ -165,7 +137,7 @@ private:
 	class CHelper {
 	public:
 		CHelper() {
-			CClientController::getInstance();
+			//CClientController::getInstance();
 		}
 		~CHelper() {
 			CClientController::releaseInstance();

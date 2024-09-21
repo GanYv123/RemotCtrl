@@ -52,7 +52,7 @@ END_MESSAGE_MAP()
 
 CRemoteClientDlg::CRemoteClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_REMOTECLIENT_DIALOG, pParent)
-	, m_server_address(0), m_nPort(_T("")), m_isFull(FALSE) {
+	, m_server_address(0), m_nPort(_T("")){
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -64,13 +64,8 @@ void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX) {
 	DDX_Control(pDX, IDC_LIST_FILE, m_List);
 }
 
-BOOL CRemoteClientDlg::isFull() const { return m_isFull; }
 
 CImage& CRemoteClientDlg::GetImage() { return m_image; }
-
-void CRemoteClientDlg::setImageStatus(BOOL IsFull) {
-	m_isFull = IsFull;
-}
 
 BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
@@ -84,7 +79,6 @@ BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_COMMAND(ID_DOWNLOAD_FILE, &CRemoteClientDlg::OnDownloadFile)
 	ON_COMMAND(ID_DELETE_FILE, &CRemoteClientDlg::OnDeleteFile)
 	ON_COMMAND(ID_RUN_FILE, &CRemoteClientDlg::OnRunFile)
-	ON_MESSAGE(WM_SEND_PACKET, &CRemoteClientDlg::OnSendPacket)
 	ON_BN_CLICKED(IDC_BTN_START_WATCH, &CRemoteClientDlg::OnBnClickedBtnStartWatch)
 	ON_NOTIFY(IPN_FIELDCHANGED, IDC_IPADDRESS_SERV, &CRemoteClientDlg::OnIpnFieldchangedIpaddressServ)
 	ON_EN_CHANGE(IDC_EDIT_PORT, &CRemoteClientDlg::OnEnChangeEditPort)
@@ -129,7 +123,6 @@ BOOL CRemoteClientDlg::OnInitDialog() {
 	UpdateData(FALSE);
 	m_dlgStatus.Create(IDD_DLG_STATUS, this);
 	m_dlgStatus.ShowWindow(SW_HIDE);
-	m_isFull = FALSE;
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -405,46 +398,9 @@ void CRemoteClientDlg::OnRunFile() {
 	}
 }
 
-/**
- * WM_SENDPACKET的响应函数
- */
-LRESULT CRemoteClientDlg::OnSendPacket(WPARAM wParam, LPARAM lParam) {
-	int ret{ 0 };
-	int cmd = wParam >> 1;
-	switch (cmd) {
-	case 4: {
-		CString strFile = (LPCTSTR)lParam;
-		CStringA strFileA(strFile);
-#ifdef _UNICODE
-		ret = CClientController::getInstance()->SendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
-#else
-		ret = CClientController::getInstance()->SendCommandPacket(cmd, wParam & 1, (BYTE*)(LPCSTR)strFile, strFile.GetLength());
-#endif // _UNICODE
-	}
-		  break;
-	case 5: {//鼠标操作
-		ret = CClientController::getInstance()->SendCommandPacket(cmd, wParam & 1, (BYTE*)lParam, sizeof(MOUSEEV));
-	}
-		  break;
-	case 6:
-	case 7:
-	case 8:
-	{
-		ret = CClientController::getInstance()->SendCommandPacket(cmd, wParam & 1);
-	}
-	break;
-	default:
-		ret = -1;
-		break;
-	}
-
-	return ret;
-}
-
 void CRemoteClientDlg::OnBnClickedBtnStartWatch() {
 	CClientController::getInstance()->StartWatchScreen();
 }
-
 
 void CRemoteClientDlg::OnIpnFieldchangedIpaddressServ(NMHDR* pNMHDR, LRESULT* pResult) {
 	LPNMIPADDRESS pIPAddr = reinterpret_cast<LPNMIPADDRESS>(pNMHDR);

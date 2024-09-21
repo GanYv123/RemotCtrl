@@ -41,8 +41,8 @@ std::string GetErrorInfo(int wsaErrCode) {
 	LPVOID lpMsgBuf = NULL;
 	FormatMessage(
 		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,wsaErrCode,MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf,0,NULL);
+		NULL, wsaErrCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf, 0, NULL);
 	if (lpMsgBuf) {
 		ret = (char*)lpMsgBuf;
 		LocalFree(lpMsgBuf);
@@ -77,7 +77,7 @@ BOOL CClientSocket::initSocket() {
 	int ret = connect(m_sock, (SOCKADDR*)&serv_adr, sizeof(serv_adr));
 	if (ret == -1) {
 		AfxMessageBox(_T("连接失败!"));
-		TRACE("连接失败: %d %s\r\n",WSAGetLastError(),GetErrorInfo(WSAGetLastError()).c_str());
+		TRACE("连接失败: %d %s\r\n", WSAGetLastError(), GetErrorInfo(WSAGetLastError()).c_str());
 		return FALSE;
 	}
 	return TRUE;
@@ -98,11 +98,11 @@ void CClientSocket::Dump(BYTE* pData, size_t nSize) {
 /** 处理命令 */
 int CClientSocket::DealCommand() {
 	if (m_sock == -1) return FALSE;
-	char* buffer = m_buffer.data();
+	char* buffer = m_buffer.data(); //多线程发送命令时会出现冲突
 	static size_t index = 0;
 	while (TRUE) {
 		size_t len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);
-		if ((len <= 0)&&(index==0)) {
+		if (((int)len <= 0) && ((int)index <= 0)) {
 			return -1;
 		}
 		//Dump((BYTE*)buffer, index);
@@ -150,7 +150,7 @@ BOOL CClientSocket::getMouseEvent(MOUSEEV& mouse) {
 
 CPacket& CClientSocket::getPacket() { return m_packet; }
 
-void CClientSocket::CloseSocket() { closesocket(m_sock); m_sock = INVALID_SOCKET;}
+void CClientSocket::CloseSocket() { closesocket(m_sock); m_sock = INVALID_SOCKET; }
 
 /**
  * @purpose:网络环境初始化

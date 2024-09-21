@@ -7,8 +7,6 @@
 #include "StatusDlg.h"
 #include "WatchDialog.h"
 
-#define WM_SEND_PACKET (WM_USER+1) //发送数据的消息
-
 // CRemoteClientDlg 对话框
 class CRemoteClientDlg : public CDialogEx {
 	// 构造
@@ -23,12 +21,9 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
 public:
-	BOOL isFull()const;
 	CImage& GetImage();
-	void setImageStatus(BOOL isFull = FALSE);
 private:
 	CImage m_image;//缓存
-	BOOL m_isFull;//缓存是否满 true->有 false->无
 private:
 	void LoadFileCurrent();
 	CString GetPath(HTREEITEM hTree);
@@ -61,7 +56,6 @@ public:
 	afx_msg void OnDownloadFile();
 	afx_msg void OnDeleteFile();
 	afx_msg void OnRunFile();
-	afx_msg LRESULT OnSendPacket(WPARAM wParam,LPARAM lParam);
 	afx_msg void OnBnClickedBtnStartWatch();
 	afx_msg void OnIpnFieldchangedIpaddressServ(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnEnChangeEditPort();
