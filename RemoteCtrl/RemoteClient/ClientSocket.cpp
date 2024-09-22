@@ -2,15 +2,15 @@
 #include "ClientSocket.h"
 #define BUFFER_SIZE 2048000
 
-CClientSocket::CClientSocket() :m_nIP(INADDR_ANY), m_nPort(0) {
-	m_sock = INVALID_SOCKET;
+CClientSocket::CClientSocket() :
+	m_nIP(INADDR_ANY), m_nPort(0),m_sock(INVALID_SOCKET) 
+{
 	if (InitSockEnv() == FALSE) {
 		MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置"), _T("初始化套接字错误"), MB_OK | MB_ICONERROR);
 		exit(0);
 	}
 	m_buffer.resize(BUFFER_SIZE);
 	memset(m_buffer.data(), 0, BUFFER_SIZE);
-
 }
 
 CClientSocket::CClientSocket(const CClientSocket& ss) {
@@ -31,16 +31,15 @@ void CClientSocket::threadEntry(void* arg) {
 	_endthread();
 }
 
-void CClientSocket::threadFunc() {
-	if (initSocket() == false) {
-		return;
-	}
+void CClientSocket::threadFunc() 
+{
 	std::string strBuffer;
 	strBuffer.resize(BUFFER_SIZE);
 	char* pBuffer = (char*)strBuffer.c_str();
 	int index = 0;
 	while (m_sock != INVALID_SOCKET) {
 		if (m_lstSend.size() > 0) {
+			TRACE("lstSend size:%d\r\n",m_lstSend.size());
 			CPacket& head = m_lstSend.front();
 			if (Send(head) == false) {
 				TRACE("发送失败\r\n");
@@ -55,7 +54,7 @@ void CClientSocket::threadFunc() {
 				CPacket pack((BYTE*)pBuffer, size);
 				if (size > 0) {//TODO:文件夹信息获取可能产生问题
 					pack.hEvent = head.hEvent;
-					pr.first->second.push_back(pack);
+					pr.first->second.push_back(pack);//将消息存到队列设置singal
 					SetEvent(head.hEvent);
 				}
 			}
@@ -65,6 +64,7 @@ void CClientSocket::threadFunc() {
 			m_lstSend.pop_front();
 		}
 	}
+	CloseSocket();
 }
 
 
@@ -166,6 +166,26 @@ BOOL CClientSocket::Send(const CPacket& pack) {
 	std::string strOut;
 	pack.Data(strOut);
 	return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;
+}
+
+BOOL CClientSocket::SendPacket(const CPacket& pack,std::list<CPacket>& lstPacks) {
+	if (m_sock == INVALID_SOCKET) {
+		if (initSocket() == false)  return FALSE;
+		_beginthread(&CClientSocket::threadEntry, 0, this);
+	}
+	m_lstSend.push_back(pack);
+	WaitForSingleObject(pack.hEvent,INFINITE);
+	std::map<HANDLE, std::list<CPacket>>::iterator it;
+	it = m_mapAck.find(pack.hEvent);
+	if (it != m_mapAck.end()) {
+		std::list<CPacket>::iterator i;
+		for (i = it->second.begin(); i != it->second.end();i++) {
+			lstPacks.push_back(*i);
+		}
+		m_mapAck.erase(it);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 BOOL CClientSocket::getFilePath(std::string& strPath) {

@@ -7,8 +7,6 @@
 #include <map>
 #include "EdoyunTool.h"
 
-#define WM_SEND_PACK (WM_USER+1)	//发送包
-#define WM_SEND_DATA (WM_USER+2)	//发送数据
 #define WM_SHOW_STATUS (WM_USER+3)	//展示状态
 #define WM_SHOW_WATCH (WM_USER+4)	//远程监控
 #define WM_SEND_MESSAGE (WM_USER+0x1000)//自定义消息处理
@@ -33,13 +31,6 @@ public:
 	void CloseSocket() {
 		CClientSocket::getInstance()->CloseSocket();
 	}
-	bool SendPacket(const CPacket& pack) {
-		CClientSocket* pClient = CClientSocket::getInstance();
-		if (pClient->initSocket() == false) {
-			return false;
-		}
-		pClient->Send(pack);
-	}
 	/// <summary>
 	/// 1.查看磁盘分区
 	/// 2.查看指定目录文件
@@ -53,7 +44,9 @@ public:
 	/// int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0
 	/// 返回值是命令号
 	/// </summary>
-	int SendCommandPacket(int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0);
+	int SendCommandPacket(int nCmd, bool bAutoClose = true, 
+		BYTE* pData = NULL, size_t nLength = 0, std::list<CPacket>* pLstPacks = NULL);
+
 	int GetImage(CImage& image) {
 		CClientSocket* pClient = CClientSocket::getInstance();
 		return CEdoyunTool::Byte2Image(image, pClient->getPacket().strData);
@@ -91,7 +84,7 @@ protected:
 		}
 	}
 	LRESULT OnSendPack(UINT nMsg, WPARAM wParam, LPARAM lParam);
-	LRESULT OnSendData(UINT nMsg, WPARAM wParam, LPARAM lParam);
+	//LRESULT OnSendData(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	LRESULT OnShowStatus(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	LRESULT OnShowWatch(UINT nMsg, WPARAM wParam, LPARAM lParam);
 

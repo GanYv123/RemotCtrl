@@ -68,15 +68,23 @@ public:
 	BOOL initSocket();
 	void Dump(BYTE* pData, size_t nSize);
 	int DealCommand();
-	BOOL Send(const char* pData, int nSize);
-	BOOL Send(const CPacket& pack);
+	/// <summary>
+	/// 发送数据包（将数据包加入发送队列）
+	/// 将接收到的数据存入 参数二
+	/// </summary>
+	/// <param name="pack">要发送的包</param>
+	/// <param name="lstPacks">应答包</param>
+	/// <returns>是否发送成功</returns>
+	BOOL SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks);
 	BOOL getFilePath(std::string& strPath);
 	BOOL getMouseEvent(MOUSEEV& mouse);
 	CPacket& getPacket();
 	void CloseSocket();
 	void UpdateAddress(int nIP,int nPort) {
-		m_nIP = nIP;
-		m_nPort = nPort;
+		if ((m_nIP != nIP) || (m_nPort != nPort)) {
+			m_nIP = nIP;
+			m_nPort = nPort;
+		}
 	}
 private:
 	std::list<CPacket> m_lstSend;
@@ -99,6 +107,8 @@ private:
 	void threadFunc();
 	BOOL InitSockEnv();
 	CClientSocket& operator=(const CClientSocket&ss) {}
+	BOOL Send(const char* pData, int nSize);
+	BOOL Send(const CPacket& pack);
 	static CClientSocket* m_instance;
 	static void releaseInstance();
 	class CHelper {
