@@ -21,7 +21,50 @@ CClientSocket::CClientSocket(const CClientSocket& ss) {
 
 CClientSocket::~CClientSocket() {
 	closesocket(m_sock);
+	m_sock = INVALID_SOCKET;
 	WSACleanup();
+}
+
+void CClientSocket::threadEntry(void* arg) {
+	CClientSocket* thiz = (CClientSocket*)arg;
+	thiz->threadFunc();
+	_endthread();
+}
+
+void CClientSocket::threadFunc() {
+	if (initSocket() == false) {
+		return;
+	}
+	std::string strBuffer;
+	strBuffer.resize(BUFFER_SIZE);
+	char* pBuffer = (char*)strBuffer.c_str();
+	int index = 0;
+	while (m_sock != INVALID_SOCKET) {
+		if (m_lstSend.size() > 0) {
+			CPacket& head = m_lstSend.front();
+			if (Send(head) == false) {
+				TRACE("发送失败\r\n");
+				continue;
+			}
+			auto pr = m_mapAck.insert(std::pair<HANDLE, std::list<CPacket>>(head.hEvent, std::list<CPacket>()));
+			
+			int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
+			if (length > 0 || index > 0) {
+				index += length;
+				size_t size = (size_t)index;
+				CPacket pack((BYTE*)pBuffer, size);
+				if (size > 0) {//TODO:文件夹信息获取可能产生问题
+					pack.hEvent = head.hEvent;
+					pr.first->second.push_back(pack);
+					SetEvent(head.hEvent);
+				}
+			}
+			else if (length == 0 && index <= 0) {
+				CloseSocket();
+			}
+			m_lstSend.pop_front();
+		}
+	}
 }
 
 
@@ -63,11 +106,6 @@ BOOL CClientSocket::initSocket() {
 	serv_adr.sin_family = AF_INET;
 	serv_adr.sin_addr.S_un.S_addr = htonl(m_nIP);
 	serv_adr.sin_port = htons(m_nPort);
-	//#pragma warning(push)
-	//#pragma warning(suppress : 4996) //inet_addr
-	//	serv_adr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");//0x0100007f
-	//#pragma warning(pop) // 当离开这个区域时，恢复之前的警告级别
-	//	serv_adr.sin_port = htons(2323);//0x1309
 
 	if (serv_adr.sin_addr.s_addr == INADDR_NONE) {
 		AfxMessageBox(_T("指定的IP地址不存在!"));
@@ -152,9 +190,7 @@ CPacket& CClientSocket::getPacket() { return m_packet; }
 
 void CClientSocket::CloseSocket() { closesocket(m_sock); m_sock = INVALID_SOCKET; }
 
-/**
- * @purpose:网络环境初始化
- */
+/** @purpose:网络环境初始化*/
 BOOL CClientSocket::InitSockEnv() {
 	//套接字初始化
 	WSADATA data;
@@ -198,13 +234,15 @@ CPacket::CPacket(const CPacket& pack) {
 	sCmd = pack.sCmd;
 	strData = pack.strData;
 	sSum = pack.sSum;
+	hEvent = pack.hEvent;
 }
 
 /**
  * @argument:
  * nSize:数据的字节大小
  */
-CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0), sSum(0) {
+CPacket::CPacket(const BYTE* pData, size_t& nSize) :
+	hEvent(INVALID_HANDLE_VALUE),sHead(0), nLength(0), sCmd(0), sSum(0) {
 	size_t i = 0;
 	for (; i < nSize; i++) {
 		if (*(WORD*)(pData + i) == 0xFEFF) { //校验包头
@@ -251,7 +289,7 @@ CPacket::CPacket(const BYTE* pData, size_t& nSize) :sHead(0), nLength(0), sCmd(0
 	nSize = 0;
 }
 
-CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
+CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize, HANDLE hEvent) {
 	sHead = 0xFEFF;
 	nLength = unsigned(nSize + 4);//数据长度 = cmd + 校验
 	sCmd = nCmd;
@@ -266,6 +304,7 @@ CPacket::CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 	for (size_t j = 0; j < strData.size(); j++) {
 		sSum += (BYTE(strData[j]) & 0xFF);
 	}
+	this->hEvent = hEvent;
 }
 
 CPacket::~CPacket() {
@@ -278,6 +317,7 @@ CPacket& CPacket::operator=(const CPacket& pack) {
 	sCmd = pack.sCmd;
 	strData = pack.strData;
 	sSum = pack.sSum;
+	hEvent = pack.hEvent;
 	return *this;
 }
 

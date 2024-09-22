@@ -40,19 +40,19 @@ public:
 		}
 		pClient->Send(pack);
 	}
-	/**
-* 1.查看磁盘分区
-* 2.查看指定目录文件
-* 3.打开文件
-* 4.下载文件
-* 9.删除文件
-* 5.鼠标操作
-* 6.发送屏幕内容
-* 7.锁机
-* 8.解锁
-* int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0
-* 返回值是命令号
-*/
+	/// <summary>
+	/// 1.查看磁盘分区
+	/// 2.查看指定目录文件
+	/// 3.打开文件
+	/// 4.下载文件
+	/// 9.删除文件
+	/// 5.鼠标操作
+	/// 6.发送屏幕内容
+	/// 7.锁机
+	/// 8.解锁
+	/// int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0
+	/// 返回值是命令号
+	/// </summary>
 	int SendCommandPacket(int nCmd, bool bAutoClose = true, BYTE* pData = NULL, size_t nLength = 0);
 	int GetImage(CImage& image) {
 		CClientSocket* pClient = CClientSocket::getInstance();
@@ -78,7 +78,11 @@ protected:
 	~CClientController() {
 		WaitForSingleObject(m_hThread, 100);
 	}
+	/// <summary>
+	/// 消息处理循环函数
+	/// </summary>
 	void threadFunc();
+
 	static unsigned int WINAPI threadEntry(void* arg);
 	static void releaseInstance() {
 		if (m_instance != nullptr) {

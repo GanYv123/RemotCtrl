@@ -4,6 +4,8 @@
 #include "framework.h"
 #include <string>
 #include <vector>
+#include <map>
+#include <list>
 
 /* 用于数据的 包、帧 */
 #pragma pack(push)
@@ -14,7 +16,7 @@ public:
 	CPacket();
 	CPacket(const CPacket& packet);
 	CPacket(const BYTE* pData, size_t& nSize);
-	CPacket(WORD nCmd, const BYTE* pData, size_t nSize);
+	CPacket(WORD nCmd, const BYTE* pData, size_t nSize,HANDLE hEvent);
 
 	~CPacket();
 	CPacket& operator=(const CPacket& pack);
@@ -28,6 +30,7 @@ public:
 	WORD sCmd;			//控制命令
 	std::string strData;//包数据
 	WORD sSum;			//和校验
+	HANDLE hEvent;		
 };
 #pragma pack(pop)
 
@@ -76,6 +79,8 @@ public:
 		m_nPort = nPort;
 	}
 private:
+	std::list<CPacket> m_lstSend;
+	std::map<HANDLE, std::list<CPacket>> m_mapAck; 
 	int m_nIP;//地址
 	int m_nPort;//端口
 	SOCKET m_sock;
@@ -85,6 +90,13 @@ private:
 	CClientSocket();
 	CClientSocket(const CClientSocket&);
 	~CClientSocket();
+	/// <summary>
+	/// 解决网络中多线程发送同步
+	/// </summary>
+	/// <param name="arg">传入this指针调用threadFunc启动线程</param>
+	static void threadEntry(void* arg);
+	//改为长连接，只初始化一次
+	void threadFunc();
 	BOOL InitSockEnv();
 	CClientSocket& operator=(const CClientSocket&ss) {}
 	static CClientSocket* m_instance;

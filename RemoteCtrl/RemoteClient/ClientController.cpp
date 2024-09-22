@@ -44,7 +44,8 @@ LRESULT CClientController::SendMessage(MSG msg) {
 	if (hEvent == NULL)return -2;
 	MSGINFO info(msg);
 	PostThreadMessage(m_nThreadId, WM_SEND_MESSAGE, (WPARAM)&info, (LPARAM)hEvent);
-	WaitForSingleObject(hEvent, INFINITE);
+	WaitForSingleObject(hEvent, INFINITE);//直到指定的事件被触发再返回结果
+	//确保当前线程在继续执行之前，消息已经得到了处理，并且处理结果是可用的
 	return info.result;
 }
 
@@ -53,7 +54,9 @@ int CClientController::SendCommandPacket(int nCmd, bool bAutoClose, BYTE* pData,
 	if (pClient->initSocket() == false) {
 		return false;
 	}
-	pClient->Send(CPacket(nCmd, pData, nLength));
+	HANDLE hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
+	//todo:不应该直接发发送，应该投入队列
+	pClient->Send(CPacket(nCmd, pData, nLength,hEvent));
 	int cmd = DealCommand();
 	TRACE("ack:%d\r\n", cmd);
 	if (bAutoClose)
@@ -164,7 +167,6 @@ void CClientController::threadDownloadFile() {
 			break;
 		}
 		long long nCount = 0;
-		//----------添加线程函数
 
 		while (nCount < nLength) {
 			pClient->DealCommand();
