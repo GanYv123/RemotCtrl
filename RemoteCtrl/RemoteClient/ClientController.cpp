@@ -43,6 +43,7 @@ LRESULT CClientController::SendMessage(MSG msg) {
 	MSGINFO info(msg);
 	PostThreadMessage(m_nThreadId, WM_SEND_MESSAGE, (WPARAM)&info, (LPARAM)hEvent);
 	WaitForSingleObject(hEvent, INFINITE);//直到指定的事件被触发再返回结果
+	CloseHandle(hEvent);
 	//确保当前线程在继续执行之前，消息已经得到了处理，并且处理结果是可用的
 	return info.result;
 }
@@ -59,6 +60,7 @@ int CClientController::SendCommandPacket(int nCmd, bool bAutoClose,
 		pLstPacks = &lstPacks;
 	}
 	pClient->SendPacket(CPacket(nCmd, pData, nLength,hEvent), *pLstPacks);
+	CloseHandle(hEvent);//回收事件句柄 防止资源耗尽
 	if (pLstPacks->size() > 0) {
 		return pLstPacks->front().sCmd;
 	}
@@ -104,10 +106,13 @@ void CClientController::threadWatchScreen() {
 			std::list<CPacket> lstPacks;
 			int ret = SendCommandPacket(6,true,NULL,0,&lstPacks);
 			if (ret == 6) {
-				if (CEdoyunTool::Byte2Image(m_remoteDlg.GetImage(),
+				
+				if (CEdoyunTool::Byte2Image(m_watchDlg.GetImage(),
 					lstPacks.front().strData) == 0) 
 				{
 					m_watchDlg.setImageStatus(TRUE);
+					TRACE("成功加载图片： %08x\r\n",(HBITMAP)m_watchDlg.GetImage());
+					TRACE("和校验： %08x\r\n",lstPacks.front().sSum);
 				}
 				else {
 					TRACE(_T("获取图片失败!\r\n"));

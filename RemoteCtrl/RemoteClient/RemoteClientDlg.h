@@ -20,10 +20,7 @@ public:
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 支持
-public:
-	CImage& GetImage();
-private:
-	CImage m_image;//缓存
+
 private:
 	void LoadFileCurrent();
 	CString GetPath(HTREEITEM hTree);

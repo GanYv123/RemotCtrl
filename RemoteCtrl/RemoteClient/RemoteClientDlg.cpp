@@ -64,9 +64,6 @@ void CRemoteClientDlg::DoDataExchange(CDataExchange* pDX) {
 	DDX_Control(pDX, IDC_LIST_FILE, m_List);
 }
 
-
-CImage& CRemoteClientDlg::GetImage() { return m_image; }
-
 BEGIN_MESSAGE_MAP(CRemoteClientDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
@@ -230,7 +227,7 @@ void CRemoteClientDlg::LoadFileCurrent() {
 		pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	}
 
-	CClientController::getInstance()->CloseSocket();
+	//CClientController::getInstance()->CloseSocket();
 }
 
 CString  CRemoteClientDlg::GetPath(HTREEITEM hTree) {
@@ -308,7 +305,7 @@ void CRemoteClientDlg::LoadFileInfo() {
 		if (cmd < 0) break;
 		pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	}
-	TRACE("RECV_COUNT_FILE = %d\r\n", RECV_COUNT_FILE);
+	//TRACE("RECV_COUNT_FILE = %d\r\n", RECV_COUNT_FILE);
 	CClientController::getInstance()->CloseSocket();
 }
 

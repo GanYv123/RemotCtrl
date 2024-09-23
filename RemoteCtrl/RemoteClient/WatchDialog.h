@@ -19,12 +19,14 @@ public:
 public:
 	int m_nObjWidth;
 	int m_nObjHeight;
+	CImage m_image;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 	BOOL m_isFull;//缓存是否满 true->有 false->无
 	DECLARE_MESSAGE_MAP()
 public:
+	CImage& GetImage() { return m_image; }
 	BOOL isFull() const { return m_isFull; }
 	void setImageStatus(BOOL isFull = FALSE) {
 		m_isFull = isFull;

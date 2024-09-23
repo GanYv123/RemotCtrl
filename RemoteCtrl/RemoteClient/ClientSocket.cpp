@@ -3,7 +3,7 @@
 #define BUFFER_SIZE 2048000
 
 CClientSocket::CClientSocket() :
-	m_nIP(INADDR_ANY), m_nPort(0),m_sock(INVALID_SOCKET) 
+	m_nIP(INADDR_ANY), m_nPort(0),m_sock(INVALID_SOCKET) ,m_bAutoClose(TRUE)
 {
 	if (InitSockEnv() == FALSE) {
 		MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置"), _T("初始化套接字错误"), MB_OK | MB_ICONERROR);
@@ -14,6 +14,7 @@ CClientSocket::CClientSocket() :
 }
 
 CClientSocket::CClientSocket(const CClientSocket& ss) {
+	m_bAutoClose = ss.m_bAutoClose;
 	m_sock = ss.m_sock;
 	m_nIP = ss.m_nIP;
 	m_nPort = ss.m_nPort;
@@ -37,6 +38,7 @@ void CClientSocket::threadFunc()
 	strBuffer.resize(BUFFER_SIZE);
 	char* pBuffer = (char*)strBuffer.c_str();
 	int index = 0;
+	initSocket();
 	while (m_sock != INVALID_SOCKET) {
 		if (m_lstSend.size() > 0) {
 			TRACE("lstSend size:%d\r\n",m_lstSend.size());
@@ -45,23 +47,33 @@ void CClientSocket::threadFunc()
 				TRACE("发送失败\r\n");
 				continue;
 			}
-			auto pr = m_mapAck.insert(std::pair<HANDLE, std::list<CPacket>>(head.hEvent, std::list<CPacket>()));
-			
-			int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-			if (length > 0 || index > 0) {
-				index += length;
-				size_t size = (size_t)index;
-				CPacket pack((BYTE*)pBuffer, size);
-				if (size > 0) {//TODO:文件夹信息获取可能产生问题
-					pack.hEvent = head.hEvent;
-					pr.first->second.push_back(pack);//将消息存到队列设置singal
-					SetEvent(head.hEvent);
+			std::map<HANDLE, std::list<CPacket>>::iterator it;
+			it = m_mapAck.find(head.hEvent);
+			std::map<HANDLE, BOOL>::iterator it0 = m_mapAutoClosed.find(head.hEvent);
+			do {
+				int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
+				if (length > 0 || index > 0) {
+					index += length;
+					size_t size = (size_t)index;
+					CPacket pack((BYTE*)pBuffer, size);
+					if (size > 0) {//TODO:文件夹信息获取可能产生问题
+						pack.hEvent = head.hEvent;
+						it->second.push_back(pack);//将消息存到队列设置singal
+						memmove(pBuffer, pBuffer + size, index - size);
+						index -= size;
+						if (it0->second) {
+							SetEvent(head.hEvent);
+						}
+					}
 				}
-			}
-			else if (length == 0 && index <= 0) {
-				CloseSocket();
-			}
+				else if (length == 0 && index <= 0) {
+					CloseSocket();
+					SetEvent(head.hEvent);//等到服务器关闭命令之后再通知事情完成
+				}
+			} while (it0->second == FALSE);
+			
 			m_lstSend.pop_front();
+			initSocket();
 		}
 	}
 	CloseSocket();
@@ -162,26 +174,25 @@ BOOL CClientSocket::Send(const char* pData, int nSize) {
 }
 
 BOOL CClientSocket::Send(const CPacket& pack) {
-	if (m_sock == -1) return FALSE;
+	if (m_sock == -1) 
+		return FALSE;
 	std::string strOut;
 	pack.Data(strOut);
 	return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;
 }
 
-BOOL CClientSocket::SendPacket(const CPacket& pack,std::list<CPacket>& lstPacks) {
+BOOL CClientSocket::SendPacket(const CPacket& pack,std::list<CPacket>& lstPacks, BOOL isAutoClosed) {
 	if (m_sock == INVALID_SOCKET) {
-		if (initSocket() == false)  return FALSE;
+		//if (initSocket() == false)  return FALSE;
 		_beginthread(&CClientSocket::threadEntry, 0, this);
 	}
+	auto pr = m_mapAck.insert(std::pair<HANDLE, std::list<CPacket>>(pack.hEvent, lstPacks));
+	m_mapAutoClosed.insert(std::pair<HANDLE,BOOL>(pack.hEvent,isAutoClosed));
 	m_lstSend.push_back(pack);
 	WaitForSingleObject(pack.hEvent,INFINITE);
 	std::map<HANDLE, std::list<CPacket>>::iterator it;
 	it = m_mapAck.find(pack.hEvent);
 	if (it != m_mapAck.end()) {
-		std::list<CPacket>::iterator i;
-		for (i = it->second.begin(); i != it->second.end();i++) {
-			lstPacks.push_back(*i);
-		}
 		m_mapAck.erase(it);
 		return TRUE;
 	}

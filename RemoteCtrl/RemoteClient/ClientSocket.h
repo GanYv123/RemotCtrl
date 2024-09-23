@@ -75,7 +75,7 @@ public:
 	/// <param name="pack">要发送的包</param>
 	/// <param name="lstPacks">应答包</param>
 	/// <returns>是否发送成功</returns>
-	BOOL SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks);
+	BOOL SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks,BOOL isAutoClosed = TRUE);
 	BOOL getFilePath(std::string& strPath);
 	BOOL getMouseEvent(MOUSEEV& mouse);
 	CPacket& getPacket();
@@ -87,8 +87,10 @@ public:
 		}
 	}
 private:
+	BOOL m_bAutoClose;
 	std::list<CPacket> m_lstSend;
 	std::map<HANDLE, std::list<CPacket>> m_mapAck; 
+	std::map<HANDLE, BOOL> m_mapAutoClosed;
 	int m_nIP;//地址
 	int m_nPort;//端口
 	SOCKET m_sock;
