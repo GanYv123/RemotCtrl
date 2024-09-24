@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <mutex>
 
 /* 用于数据的 包、帧 */
 #pragma pack(push)
@@ -87,7 +88,9 @@ public:
 		}
 	}
 private:
+	HANDLE m_hThread;
 	BOOL m_bAutoClose;
+	std::mutex m_lock;
 	std::list<CPacket> m_lstSend;
 	std::map<HANDLE, std::list<CPacket>&> m_mapAck; 
 	std::map<HANDLE, BOOL> m_mapAutoClosed;
