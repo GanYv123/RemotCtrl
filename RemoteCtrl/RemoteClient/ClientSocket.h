@@ -89,7 +89,7 @@ public:
 private:
 	BOOL m_bAutoClose;
 	std::list<CPacket> m_lstSend;
-	std::map<HANDLE, std::list<CPacket>> m_mapAck; 
+	std::map<HANDLE, std::list<CPacket>&> m_mapAck; 
 	std::map<HANDLE, BOOL> m_mapAutoClosed;
 	int m_nIP;//µØÖ·
 	int m_nPort;//¶Ë¿Ú

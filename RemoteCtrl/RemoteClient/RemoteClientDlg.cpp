@@ -52,7 +52,7 @@ END_MESSAGE_MAP()
 
 CRemoteClientDlg::CRemoteClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_REMOTECLIENT_DIALOG, pParent)
-	, m_server_address(0), m_nPort(_T("")){
+	, m_server_address(0), m_nPort(_T("")) {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -172,13 +172,14 @@ void CRemoteClientDlg::OnBnClickedBtnTest() {
 
 
 void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
-	int ret = CClientController::getInstance()->SendCommandPacket(1);
-	if (ret == -1) {
+	std::list<CPacket> lstPackets;
+	int ret = CClientController::getInstance()->SendCommandPacket(1, TRUE, NULL, 0, &lstPackets);
+	if (ret == -1 || lstPackets.size() <= 0) {
 		AfxMessageBox(_T("命令处理失败!"));
 		return;
 	}
-	CClientSocket* pClient = CClientSocket::getInstance();
-	std::string drivers = pClient->getPacket().strData;
+	CPacket& head = lstPackets.front();
+	std::string drivers = head.strData;
 	std::string dr;
 	m_Tree.DeleteAllItems();
 	for (size_t i = 0; i < drivers.size(); i++)//C,D,F
@@ -269,44 +270,33 @@ void CRemoteClientDlg::LoadFileInfo() {
 	DeleteTreeChildrenItem(hTreeSelected);
 	m_List.DeleteAllItems();
 	CString strPath = GetPath(hTreeSelected);
-
+	std::list<CPacket> lstPacket;
 #ifdef _UNICODE
 	CStringA strPathA(strPath);
-	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength());
+	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength(), &lstPacket);
 #else
 	int nCmd = CClientController::getInstance()->SendCommandPacket(
-		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
+		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength(), &lstPacket);
 #endif //#ifdef _UNICODE
-
-	PFILEINFO pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
-	int RECV_COUNT_FILE{ 0 };
-	while (pInfo->HasNext) {
-		TRACE("Client OnNMDblclkTreeDir(): %s isDir:%s\r\n",
-			pInfo->szFileName, pInfo->IsDirectory == 0 ? "true" : "false");
-		if (pInfo->IsDirectory) {
-			if (CString(pInfo->szFileName) == "." || CString(pInfo->szFileName) == "..") {
-				int cmd = CClientController::getInstance()->DealCommand();
-				TRACE("ack:%d\r\n", cmd);
-				if (cmd < 0) break;
-				pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
-				continue;
+	if (lstPacket.size() > 0) {
+		std::list<CPacket>::iterator it = lstPacket.begin();
+		for (; it != lstPacket.end(); it++) {
+			PFILEINFO pInfo = (PFILEINFO)(*it).strData.c_str();
+			if (pInfo->HasNext == FALSE) continue;
+			if (pInfo->IsDirectory) {
+				if (CString(pInfo->szFileName) == "." || CString(pInfo->szFileName) == "..") {
+					continue;
+				}
+				CString strFileName(pInfo->szFileName);
+				HTREEITEM hTemp = m_Tree.InsertItem(strFileName, hTreeSelected, TVI_LAST);
+				m_Tree.InsertItem(_T(""), hTemp, TVI_LAST);
 			}
-			CString strFileName(pInfo->szFileName);
-			HTREEITEM hTemp = m_Tree.InsertItem(strFileName, hTreeSelected, TVI_LAST);
-			m_Tree.InsertItem(_T(""), hTemp, TVI_LAST);
+			else {
+				CString strFormatted(pInfo->szFileName);
+				m_List.InsertItem(0, strFormatted);
+			}
 		}
-		else {
-			CString strFormatted(pInfo->szFileName);
-			m_List.InsertItem(0, strFormatted);
-		}
-		RECV_COUNT_FILE++;
-		int cmd = CClientController::getInstance()->DealCommand();
-		//		TRACE("ack:%d\r\n", cmd);
-		if (cmd < 0) break;
-		pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	}
-	//TRACE("RECV_COUNT_FILE = %d\r\n", RECV_COUNT_FILE);
-	CClientController::getInstance()->CloseSocket();
 }
 
 
@@ -353,7 +343,7 @@ void CRemoteClientDlg::OnDownloadFile() {
 	int ret = CClientController::getInstance()->DownFile(strFile);
 	if (ret != 0) {
 		MessageBox(_T("下载失败"));
-		TRACE("下载失败 ret = % d\r\n",ret);
+		TRACE("下载失败 ret = % d\r\n", ret);
 	}
 }
 
