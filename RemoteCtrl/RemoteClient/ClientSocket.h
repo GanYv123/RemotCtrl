@@ -9,6 +9,7 @@
 #include <mutex>
 
 #define  WM_SEND_PACK (WM_USER+1) //发送包数据
+#define  WM_SEND_PACK_ACK (WM_USER+2) //发送包数据应答
 
 /* 用于数据的 包、帧 */
 #pragma pack(push)
@@ -19,7 +20,7 @@ public:
 	CPacket();
 	CPacket(const CPacket& packet);
 	CPacket(const BYTE* pData, size_t& nSize);
-	CPacket(WORD nCmd, const BYTE* pData, size_t nSize,HANDLE hEvent);
+	CPacket(WORD nCmd, const BYTE* pData, size_t nSize);
 
 	~CPacket();
 	CPacket& operator=(const CPacket& pack);
@@ -33,7 +34,6 @@ public:
 	WORD sCmd;			//控制命令
 	std::string strData;//包数据
 	WORD sSum;			//和校验
-	HANDLE hEvent;		
 };
 #pragma pack(pop)
 
@@ -50,6 +50,32 @@ typedef struct file_info {
 	char szFileName[256];
 
 }FILEINFO, * PFILEINFO;
+
+enum{
+	CSM_AUTOCLOSE = 1,//CSM = client socket mode 自动关闭模式
+	
+};
+
+typedef struct PacketData {
+	std::string strData;
+	UINT nMode;
+	PacketData(const char* pData, size_t nLen, UINT mode) {
+		strData.resize(nLen);
+		memcpy((char*)strData.c_str(), pData, nLen);
+		nMode = mode;
+	}
+	PacketData(const PacketData& data) {
+		strData = data.strData;
+		nMode = data.nMode;
+	}
+	PacketData& operator=(const PacketData& data) {
+		if (this != &data) {
+			strData = data.strData;
+			nMode = data.nMode;
+		}
+		return *this;
+	}
+}PACKET_DATA;
 
 typedef struct MouseEvent {
 	MouseEvent() {
@@ -71,32 +97,26 @@ public:
 	BOOL initSocket();
 	void Dump(BYTE* pData, size_t nSize);
 	int DealCommand();
-	/// <summary>
-	/// 发送数据包（将数据包加入发送队列）
-	/// 将接收到的数据存入 参数二
-	/// </summary>
-	/// <param name="pack">要发送的包</param>
-	/// <param name="lstPacks">应答包</param>
-	/// <returns>是否发送成功</returns>
-	BOOL SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks,BOOL isAutoClosed = TRUE);
+	BOOL SendPacket(HWND hWnd, const CPacket& pack, BOOL isAutoClosed = TRUE);
 	BOOL getFilePath(std::string& strPath);
 	BOOL getMouseEvent(MOUSEEV& mouse);
 	CPacket& getPacket();
 	void CloseSocket();
-	void UpdateAddress(int nIP,int nPort) {
+	void UpdateAddress(int nIP, int nPort) {
 		if ((m_nIP != nIP) || (m_nPort != nPort)) {
 			m_nIP = nIP;
 			m_nPort = nPort;
 		}
 	}
 private:
+	UINT m_nThreadID;
 	typedef void(CClientSocket::* MSGFUNC)(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	std::map<UINT, MSGFUNC> m_mapFunc;
 	HANDLE m_hThread;
 	BOOL m_bAutoClose;
 	std::mutex m_lock;
 	std::list<CPacket> m_lstSend;
-	std::map<HANDLE, std::list<CPacket>&> m_mapAck; 
+	std::map<HANDLE, std::list<CPacket>&> m_mapAck;
 	std::map<HANDLE, BOOL> m_mapAutoClosed;
 	int m_nIP;//地址
 	int m_nPort;//端口
@@ -105,18 +125,18 @@ private:
 	std::vector<char> m_buffer;
 	//
 	CClientSocket();
-	CClientSocket(const CClientSocket&ss);
+	CClientSocket(const CClientSocket& ss);
 	~CClientSocket();
 	/// <summary>
 	/// 解决网络中多线程发送同步
 	/// </summary>
 	/// <param name="arg">传入this指针调用threadFunc启动线程</param>
-	static void threadEntry(void* arg);
+	static unsigned WINAPI threadEntry(void* arg);
 	//改为长连接，只初始化一次
-	void threadFunc();
+	//void threadFunc();
 	void threadFunc2();
 	BOOL InitSockEnv();
-	CClientSocket& operator=(const CClientSocket&ss) {}
+	CClientSocket& operator=(const CClientSocket& ss) {}
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(const CPacket& pack);
 	/// <summary>
@@ -125,7 +145,7 @@ private:
 	/// <param name="nMsg"></param>
 	/// <param name="wParam">缓冲区的值</param>
 	/// <param name="lParam">缓冲区的长度</param>
-	void SendPack(UINT nMsg,WPARAM wParam,LPARAM lParam);
+	void SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	static CClientSocket* m_instance;
 	static void releaseInstance();
 	class CHelper {

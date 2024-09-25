@@ -48,24 +48,11 @@ LRESULT CClientController::SendMessage(MSG msg) {
 	return info.result;
 }
 
-int CClientController::SendCommandPacket(int nCmd, bool bAutoClose,
-	BYTE* pData, size_t nLength,std::list<CPacket>* pLstPacks) 
+BOOL CClientController::SendCommandPacket(HWND hWnd, int nCmd,
+	bool bAutoClose, BYTE* pData, size_t nLength) 
 {
 	CClientSocket* pClient = CClientSocket::getInstance();
-	HANDLE hEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
-	//todo:不应该直接发发送，应该投入队列
-	std::list<CPacket> lstPacks;//应答结果包
-
-	if (pLstPacks == NULL) {
-		pLstPacks = &lstPacks;
-	}
-	pClient->SendPacket(CPacket(nCmd, pData, nLength,hEvent), *pLstPacks,bAutoClose);
-	CloseHandle(hEvent);//回收事件句柄 防止资源耗尽
-	if (pLstPacks->size() > 0) {
-		return pLstPacks->front().sCmd;
-	}
-
-	return -1;
+	return pClient->SendPacket(hWnd, CPacket(nCmd, pData, nLength), bAutoClose);
 }
 
 int CClientController::DownFile(CString strPath) {
@@ -73,7 +60,6 @@ int CClientController::DownFile(CString strPath) {
 	if (dlg.DoModal() == IDOK) {
 		m_strRemote = strPath;
 		m_strLocal = dlg.GetPathName();
-
 		m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
 		//检测线程是否被创建
 		if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT) {
@@ -104,9 +90,10 @@ void CClientController::threadWatchScreen() {
 	while (!m_isClosed) {
 		if (m_watchDlg.isFull() == FALSE) {//如果缓存为空，放入缓存
 			std::list<CPacket> lstPacks;
-			int ret = SendCommandPacket(6,true,NULL,0,&lstPacks);
-			if (ret == 6) {
-				
+			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(),6,true,NULL,0);
+			//TODO:添加消息响应函数WM_SEND_PACKACK
+			//TODO:控制发送频率
+			if (ret == 6) {	
 				if (CEdoyunTool::Byte2Image(m_watchDlg.GetImage(),
 					lstPacks.front().strData) == 0) 
 				{
@@ -162,9 +149,9 @@ void CClientController::threadDownloadFile() {
 #ifdef _UNICODE
 		// 将 Unicode CString 转换为 ANSI CStringA
 		CStringA strRemoteA(m_strRemote);
-		ret = SendCommandPacket(4, FALSE, (BYTE*)(LPCSTR)strRemoteA, strRemoteA.GetLength());
+		ret = SendCommandPacket(m_remoteDlg, 4, FALSE, (BYTE*)(LPCSTR)strRemoteA, strRemoteA.GetLength());
 #else
-		ret = SendCommandPacket(4, FALSE, (BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength());
+		ret = SendCommandPacket(m_remoteDlg, 4, FALSE, (BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength());
 #endif // _UNICODE
 		if (ret < 0) {
 			AfxMessageBox(_T("执行下载命令失败!!！"));

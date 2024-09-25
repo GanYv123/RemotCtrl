@@ -167,13 +167,13 @@ HCURSOR CRemoteClientDlg::OnQueryDragIcon() {
 }
 
 void CRemoteClientDlg::OnBnClickedBtnTest() {
-	CClientController::getInstance()->SendCommandPacket(22233);
+	CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 22233);
 }
 
 
 void CRemoteClientDlg::OnBnClickedBtnFileinfo() {
 	std::list<CPacket> lstPackets;
-	int ret = CClientController::getInstance()->SendCommandPacket(1, TRUE, NULL, 0, &lstPackets);
+	int ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 1, TRUE, NULL, 0);
 	if (ret == -1 || lstPackets.size() <= 0) {
 		AfxMessageBox(_T("命令处理失败!"));
 		return;
@@ -208,9 +208,9 @@ void CRemoteClientDlg::LoadFileCurrent() {
 	m_List.DeleteAllItems();
 #ifdef _UNICODE
 	CStringA strPathA(strPath);
-	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength());
+	int nCmd = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength());
 #else
-	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
+	int nCmd = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
 #endif //#ifdef _UNICODE
 
 	/// todo???
@@ -273,10 +273,11 @@ void CRemoteClientDlg::LoadFileInfo() {
 	std::list<CPacket> lstPacket;
 #ifdef _UNICODE
 	CStringA strPathA(strPath);
-	int nCmd = CClientController::getInstance()->SendCommandPacket(2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength(), &lstPacket);
+	int nCmd = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 
+		2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength());
 #else
 	int nCmd = CClientController::getInstance()->SendCommandPacket(
-		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength(), &lstPacket);
+		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
 #endif //#ifdef _UNICODE
 	if (lstPacket.size() > 0) {
 		TRACE("lstPackets.size = %d\r\n",lstPacket.size());
@@ -358,9 +359,11 @@ void CRemoteClientDlg::OnDeleteFile() {
 	int ret{ -1 };
 #ifdef _UNICODE
 	CStringA strFileA(strFile);
-	ret = CClientController::getInstance()->SendCommandPacket(9, TRUE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+	ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 
+		9, TRUE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
 #else
-	ret = CClientController::getInstance()->SendCommandPacket(9, TRUE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
+	ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 
+		9, TRUE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
 #endif // _UNICODE
 	if (ret < 0) {
 		AfxMessageBox(_T("删除文件失败!"));
@@ -378,9 +381,11 @@ void CRemoteClientDlg::OnRunFile() {
 	int ret{ -1 };
 #ifdef _UNICODE
 	CStringA strFileA(strFile);
-	ret = CClientController::getInstance()->SendCommandPacket(3, TRUE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
+	ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 
+		3, TRUE, (BYTE*)(LPCSTR)strFileA, strFileA.GetLength());
 #else
-	ret = CClientController::getInstance()->SendCommandPacket(3, TRUE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
+	ret = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 
+		3, TRUE, (BYTE*)(LPCTSTR)strFile, strFile.GetLength());
 #endif // _UNICODE
 	if (ret < 0) {
 		AfxMessageBox(_T("打开文件失败"));
