@@ -8,6 +8,8 @@
 #include <list>
 #include <mutex>
 
+#define  WM_SEND_PACK (WM_USER+1) //发送包数据
+
 /* 用于数据的 包、帧 */
 #pragma pack(push)
 #pragma pack(1)
@@ -88,6 +90,8 @@ public:
 		}
 	}
 private:
+	typedef void(CClientSocket::* MSGFUNC)(UINT nMsg, WPARAM wParam, LPARAM lParam);
+	std::map<UINT, MSGFUNC> m_mapFunc;
 	HANDLE m_hThread;
 	BOOL m_bAutoClose;
 	std::mutex m_lock;
@@ -101,7 +105,7 @@ private:
 	std::vector<char> m_buffer;
 	//
 	CClientSocket();
-	CClientSocket(const CClientSocket&);
+	CClientSocket(const CClientSocket&ss);
 	~CClientSocket();
 	/// <summary>
 	/// 解决网络中多线程发送同步
@@ -110,10 +114,18 @@ private:
 	static void threadEntry(void* arg);
 	//改为长连接，只初始化一次
 	void threadFunc();
+	void threadFunc2();
 	BOOL InitSockEnv();
 	CClientSocket& operator=(const CClientSocket&ss) {}
 	BOOL Send(const char* pData, int nSize);
 	BOOL Send(const CPacket& pack);
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="nMsg"></param>
+	/// <param name="wParam">缓冲区的值</param>
+	/// <param name="lParam">缓冲区的长度</param>
+	void SendPack(UINT nMsg,WPARAM wParam,LPARAM lParam);
 	static CClientSocket* m_instance;
 	static void releaseInstance();
 	class CHelper {

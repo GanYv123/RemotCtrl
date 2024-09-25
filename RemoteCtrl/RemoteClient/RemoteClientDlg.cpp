@@ -279,6 +279,7 @@ void CRemoteClientDlg::LoadFileInfo() {
 		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength(), &lstPacket);
 #endif //#ifdef _UNICODE
 	if (lstPacket.size() > 0) {
+		TRACE("lstPackets.size = %d\r\n",lstPacket.size());
 		std::list<CPacket>::iterator it = lstPacket.begin();
 		for (; it != lstPacket.end(); it++) {
 			PFILEINFO pInfo = (PFILEINFO)(*it).strData.c_str();
