@@ -402,10 +402,10 @@ LRESULT CRemoteClientDlg::OnSendPacketAck(WPARAM wParam, LPARAM lParam) {
 		//对方关闭了套接字
 	}
 	else{
-		CPacket* pPack = (CPacket*)wParam;
-		if (pPack != NULL) {
-			CPacket& head = *pPack;
-			switch (pPack->sCmd) {
+		if (wParam != NULL) {
+			CPacket head = *(CPacket*)wParam;
+			delete (CPacket*)wParam;
+			switch (head.sCmd) {
 			case 1://获取驱动信息
 			{
 				std::string drivers = head.strData;
