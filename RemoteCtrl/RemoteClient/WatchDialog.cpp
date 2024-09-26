@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CWatchDialog, CDialog)
 	ON_STN_CLICKED(IDC_WATCH, &CWatchDialog::OnStnClickedWatch)
 	ON_BN_CLICKED(IDC_BTN_LOCK, &CWatchDialog::OnBnClickedBtnLock)
 	ON_BN_CLICKED(IDC_BTN_UNLOCK, &CWatchDialog::OnBnClickedBtnUnlock)
+	ON_MESSAGE(WM_SEND_PACK_ACK,&CWatchDialog::OnSendPacketAck)
 END_MESSAGE_MAP()
 
 
@@ -59,7 +60,7 @@ BOOL CWatchDialog::OnInitDialog() {
 
 	// TODO:  在此添加额外的初始化
 	m_isFull = FALSE;
-	SetTimer(0, 45, NULL);
+	//SetTimer(0, 45, NULL);
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
@@ -68,6 +69,7 @@ BOOL CWatchDialog::OnInitDialog() {
 
 void CWatchDialog::OnTimer(UINT_PTR nIDEvent) {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	/**
 	if (nIDEvent == 0) {
 		CClientController* pParent = CClientController::getInstance();
 		if (m_isFull) {
@@ -83,14 +85,51 @@ void CWatchDialog::OnTimer(UINT_PTR nIDEvent) {
 			TRACE("更新图片完成 w:%d h:%d %08x\r\n", m_nObjWidth, m_nObjHeight,(HBITMAP)m_image);
 		}
 	}
+	//*/
 	CDialog::OnTimer(nIDEvent);
 }
 
 
-//void CWatchDialog::OnStnClickedWatch() {
-//	// TODO: 在此添加控件通知处理程序代码
-//	
-//}
+LRESULT CWatchDialog::OnSendPacketAck(WPARAM wParam, LPARAM lParam) {
+	if ((lParam == -1) || (lParam == -2)) {
+		//TODO:错误处理
+	}
+	else if (lParam == 1) {
+		//对方关闭了套接字
+	}
+	else{
+		CPacket* pPack = (CPacket*)wParam;
+		if (pPack != NULL) {
+			switch (pPack->sCmd) {
+			case 6:
+			{
+				if (m_isFull) {
+					CEdoyunTool::Byte2Image(m_image, pPack->strData);
+					CRect rect;
+					m_picture.GetWindowRect(rect);
+					m_nObjWidth = m_image.GetWidth();
+					m_nObjHeight = m_image.GetHeight();
+					m_image.StretchBlt(
+						m_picture.GetDC()->GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), SRCCOPY);
+					m_picture.InvalidateRect(NULL);
+					m_image.Destroy();
+					m_isFull = FALSE;
+					TRACE("更新图片完成 w:%d h:%d %08x\r\n", m_nObjWidth, m_nObjHeight, (HBITMAP)m_image);
+				}
+				break;
+			}
+			case 5:
+				//break;
+			case 7:
+				//break;
+			case 8:
+				//break;
+			default: break;
+			}
+		}
+	}
+	return 0;
+}
 
 /// \左键双击
 void CWatchDialog::OnLButtonDblClk(UINT nFlags, CPoint point) {

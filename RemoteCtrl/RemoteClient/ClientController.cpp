@@ -49,10 +49,16 @@ LRESULT CClientController::SendMessage(MSG msg) {
 }
 
 BOOL CClientController::SendCommandPacket(HWND hWnd, int nCmd,
-	bool bAutoClose, BYTE* pData, size_t nLength) 
+	bool bAutoClose, BYTE* pData, size_t nLength, WPARAM wParam) 
 {
 	CClientSocket* pClient = CClientSocket::getInstance();
-	return pClient->SendPacket(hWnd, CPacket(nCmd, pData, nLength), bAutoClose);
+	return pClient->SendPacket(hWnd, CPacket(nCmd, pData, nLength), bAutoClose, wParam);
+}
+
+void CClientController::DownloadEnd() {
+	m_statusDlg.ShowWindow(SW_HIDE);
+	m_remoteDlg.EndWaitCursor();
+	m_remoteDlg.MessageBox(_T("下载完成!"), _T("完成"));
 }
 
 int CClientController::DownFile(CString strPath) {
@@ -60,11 +66,35 @@ int CClientController::DownFile(CString strPath) {
 	if (dlg.DoModal() == IDOK) {
 		m_strRemote = strPath;
 		m_strLocal = dlg.GetPathName();
-		m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
-		//检测线程是否被创建
-		if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT) {
+		FILE* pFile{ nullptr };
+		errno_t err;
+#ifdef _UNICODE
+		// 将 Unicode CString 转换为 ANSI CStringA
+		CStringA pFileA(m_strLocal);
+		err = fopen_s(&pFile, pFileA.GetString(), "wb+"); // 获取 ANSI 字符串
+#else
+		// 非 Unicode 版本，直接使用 CString
+		err = fopen_s(&pFile, dlg.GetPathName().GetString(), "wb+");
+#endif // _UNICODE
+		if (err != 0) {
+			AfxMessageBox(_T("本地无权限，文件无法创建!"));
 			return -1;
 		}
+		// 文件处理逻辑
+#ifdef _UNICODE
+		// 将 Unicode CString 转换为 ANSI CStringA
+		CStringA strRemoteA(m_strRemote);
+		SendCommandPacket(m_remoteDlg, 4, FALSE,
+			(BYTE*)(LPCSTR)strRemoteA, strRemoteA.GetLength(), (WPARAM)pFile);
+#else
+		SendCommandPacket(m_remoteDlg, 4, FALSE,
+			(BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength(), (WPARAM)pFile);
+#endif // _UNICODE
+		//m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
+		//检测线程是否被创建
+// 		if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT) {
+// 			return -1;
+// 		}
 		m_remoteDlg.BeginWaitCursor();
 		m_statusDlg.m_info.SetWindowText(_T("命令正在执行中！..."));
 		m_statusDlg.ShowWindow(SW_SHOW);
@@ -149,15 +179,13 @@ void CClientController::threadDownloadFile() {
 #ifdef _UNICODE
 		// 将 Unicode CString 转换为 ANSI CStringA
 		CStringA strRemoteA(m_strRemote);
-		ret = SendCommandPacket(m_remoteDlg, 4, FALSE, (BYTE*)(LPCSTR)strRemoteA, strRemoteA.GetLength());
+		ret = SendCommandPacket(m_remoteDlg, 4, FALSE,
+			(BYTE*)(LPCSTR)strRemoteA, strRemoteA.GetLength(),(WPARAM)pFile);
 #else
-		ret = SendCommandPacket(m_remoteDlg, 4, FALSE, (BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength());
+		ret = SendCommandPacket(m_remoteDlg, 4, FALSE,
+			(BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength(),(WPARAM)pFile);
 #endif // _UNICODE
-		if (ret < 0) {
-			AfxMessageBox(_T("执行下载命令失败!!！"));
-			TRACE("执行下载失败:ret = %d\r\n", ret);
-			break;
-		}
+
 		long long nLength = *(long long*)pClient->getPacket().strData.c_str();
 		if (nLength == 0) {
 			AfxMessageBox(_T("文件长度为0，无法读取文件!"));

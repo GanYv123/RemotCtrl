@@ -49,12 +49,13 @@ public:
 	/// <param name="nLength">数据长度</param>
 	/// <returns>是否发送成功</returns>
 	BOOL SendCommandPacket(HWND hWnd, int nCmd, bool bAutoClose = true,
-		BYTE* pData = NULL, size_t nLength = 0);
+		BYTE* pData = NULL, size_t nLength = 0, WPARAM wParam = 0);
 
 	int GetImage(CImage& image) {
 		CClientSocket* pClient = CClientSocket::getInstance();
 		return CEdoyunTool::Byte2Image(image, pClient->getPacket().strData);
 	}
+	void DownloadEnd();
 	int DownFile(CString strPath);
 	void StartWatchScreen();
 protected:

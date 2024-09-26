@@ -1,6 +1,9 @@
 ﻿#pragma once
 #include "afxdialogex.h"
 
+#ifndef WM_SEND_PACK_ACK
+#define  WM_SEND_PACK_ACK (WM_USER+2) //发送包数据应答
+#endif
 
 // CWatchDialog 对话框
 
@@ -36,7 +39,7 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	// 屏幕图片显示
 	CStatic m_picture;
-	//afx_msg void OnStnClickedWatch();
+	afx_msg LRESULT OnSendPacketAck(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
