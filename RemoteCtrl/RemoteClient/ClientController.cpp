@@ -37,17 +37,6 @@ int CClientController::Invoke(CWnd*& pMainWnd) {
 	return m_remoteDlg.DoModal();
 }
 
-LRESULT CClientController::SendMessage(MSG msg) {
-	HANDLE hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-	if (hEvent == NULL)return -2;
-	MSGINFO info(msg);
-	PostThreadMessage(m_nThreadId, WM_SEND_MESSAGE, (WPARAM)&info, (LPARAM)hEvent);
-	WaitForSingleObject(hEvent, INFINITE);//直到指定的事件被触发再返回结果
-	CloseHandle(hEvent);
-	//确保当前线程在继续执行之前，消息已经得到了处理，并且处理结果是可用的
-	return info.result;
-}
-
 BOOL CClientController::SendCommandPacket(HWND hWnd, int nCmd,
 	bool bAutoClose, BYTE* pData, size_t nLength, WPARAM wParam) 
 {
@@ -92,11 +81,7 @@ int CClientController::DownFile(CString strPath) {
 		SendCommandPacket(m_remoteDlg, 4, FALSE,
 			(BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength(), (WPARAM)pFile);
 #endif // _UNICODE
-		//m_hThreadDownload = (HANDLE)_beginthread(&CClientController::threadDownloadEntry, 0, this);
-		//检测线程是否被创建
-// 		if (WaitForSingleObject(m_hThreadDownload, 0) != WAIT_TIMEOUT) {
-// 			return -1;
-// 		}
+
 		m_remoteDlg.BeginWaitCursor();
 		m_statusDlg.m_info.SetWindowText(_T("命令正在执行中！..."));
 		m_statusDlg.ShowWindow(SW_SHOW);
@@ -126,8 +111,6 @@ void CClientController::threadWatchScreen() {
 			}
 			nTick = GetTickCount64();
 			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(),6,true,NULL,0);
-			//TODO:添加消息响应函数WM_SEND_PACKACK
-			//TODO:控制发送频率
 			if (ret == 1) {	
 				//TRACE("成功发送请求图片命令\r\n");
 			}
@@ -146,73 +129,6 @@ void CClientController::threadWatchScreen() {
 void CClientController::threadWatchScreen(void* arg) {
 	CClientController* thiz = (CClientController*)arg;
 	thiz->threadWatchScreen();
-	_endthread();
-}
-
-void CClientController::threadDownloadFile() {
-	FILE* pFile{ nullptr };
-	errno_t err;
-
-#ifdef _UNICODE
-	// 将 Unicode CString 转换为 ANSI CStringA
-	CStringA pFileA(m_strLocal);
-	err = fopen_s(&pFile, pFileA.GetString(), "wb+"); // 获取 ANSI 字符串
-#else
-	// 非 Unicode 版本，直接使用 CString
-	err = fopen_s(&pFile, dlg.GetPathName().GetString(), "wb+");
-#endif // _UNICODE
-
-	if (err != 0) {
-		AfxMessageBox(_T("本地无权限，文件无法创建!"));
-		m_statusDlg.ShowWindow(SW_HIDE);
-		m_remoteDlg.EndWaitCursor();
-		return;
-	}
-	// 文件处理逻辑
-	CClientSocket* pClient = CClientSocket::getInstance();
-	int ret{ -1 };
-	do {
-#ifdef _UNICODE
-		// 将 Unicode CString 转换为 ANSI CStringA
-		CStringA strRemoteA(m_strRemote);
-		ret = SendCommandPacket(m_remoteDlg, 4, FALSE,
-			(BYTE*)(LPCSTR)strRemoteA, strRemoteA.GetLength(),(WPARAM)pFile);
-#else
-		ret = SendCommandPacket(m_remoteDlg, 4, FALSE,
-			(BYTE*)(LPCTSTR)m_strRemote, m_strRemote.GetLength(),(WPARAM)pFile);
-#endif // _UNICODE
-
-		long long nLength = *(long long*)pClient->getPacket().strData.c_str();
-		if (nLength == 0) {
-			AfxMessageBox(_T("文件长度为0，无法读取文件!"));
-			break;
-		}
-		long long nCount = 0;
-
-		while (nCount < nLength) {
-			pClient->DealCommand();
-			if (ret < 0) {
-				AfxMessageBox(_T("传输失败"));
-				TRACE("传输失败:ret = %d\r\n", ret);
-				break;
-			}
-			//pClient->getPacket().strData.c_str();
-			fwrite(pClient->getPacket().strData.c_str(), 1, pClient->getPacket().strData.size(), pFile);
-			nCount += pClient->getPacket().strData.size();
-		}
-	} while (FALSE);
-	fclose(pFile);
-	pClient->CloseSocket();
-	m_statusDlg.ShowWindow(SW_HIDE);
-	m_remoteDlg.EndWaitCursor();
-	m_remoteDlg.MessageBox(_T("下载完成!"), _T("完成"));
-	m_remoteDlg.LoadFileInfo();
-}
-
-
-void CClientController::threadDownloadEntry(void* arg) {
-	CClientController* thiz = (CClientController*)arg;
-	thiz->threadDownloadFile();
 	_endthread();
 }
 

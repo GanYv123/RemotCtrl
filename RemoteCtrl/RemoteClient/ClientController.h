@@ -19,8 +19,6 @@ public:
 	int InitController();
 	//启动
 	int Invoke(CWnd*& pMainWnd);
-	//发送消息
-	LRESULT SendMessage(MSG msg);
 	//更新网络服务器的地址
 	void UpdateAddress(int nIP, int nPort) {
 		CClientSocket::getInstance()->UpdateAddress(nIP, nPort);
@@ -61,8 +59,6 @@ public:
 protected:
 	void threadWatchScreen();
 	static void threadWatchScreen(void* arg);
-	void threadDownloadFile();
-	static void threadDownloadEntry(void* arg);
 	CClientController() :
 		m_statusDlg(&m_remoteDlg),
 		m_watchDlg(&m_remoteDlg) 
@@ -70,7 +66,6 @@ protected:
 		m_isClosed = TRUE;
 		m_hThreadWatch = INVALID_HANDLE_VALUE;
 		m_hThread = INVALID_HANDLE_VALUE;
-		m_hThreadDownload = INVALID_HANDLE_VALUE;
 		m_nThreadId = -1;
 	}
 	~CClientController() {
@@ -88,7 +83,7 @@ protected:
 			m_instance = nullptr;
 		}
 	}
-	LRESULT OnSendPack(UINT nMsg, WPARAM wParam, LPARAM lParam);
+	//LRESULT OnSendPack(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	//LRESULT OnSendData(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	LRESULT OnShowStatus(UINT nMsg, WPARAM wParam, LPARAM lParam);
 	LRESULT OnShowWatch(UINT nMsg, WPARAM wParam, LPARAM lParam);
@@ -126,7 +121,6 @@ private:
 	CRemoteClientDlg m_remoteDlg;
 	CStatusDlg m_statusDlg;
 	HANDLE m_hThread;
-	HANDLE m_hThreadDownload;
 	HANDLE m_hThreadWatch;
 	BOOL m_isClosed;//监视是否关闭
 	//下载文件的远程路径
