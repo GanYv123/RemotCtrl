@@ -9,7 +9,7 @@ CClientSocket::CClientSocket() :
 		MessageBox(NULL, _T("无法初始化套接字环境,请检查网络设置"), _T("初始化套接字错误"), MB_OK | MB_ICONERROR);
 		exit(0);
 	}
-	m_eventInvoke = CreateEvent(NULL,TRUE,FALSE,NULL);
+	m_eventInvoke = CreateEvent(NULL, TRUE, FALSE, NULL);
 	m_hThread = (HANDLE)_beginthreadex(NULL, 0, &CClientSocket::threadEntry, this, 0, &m_nThreadID);
 	if (WaitForSingleObject(m_eventInvoke, 100) == WAIT_TIMEOUT) {
 		TRACE("网络消息处理 线程启动失败!\r\n");
@@ -38,9 +38,8 @@ CClientSocket::CClientSocket(const CClientSocket& ss) {
 	m_nIP = ss.m_nIP;
 	m_nPort = ss.m_nPort;
 	std::map<UINT, CClientSocket::MSGFUNC>::const_iterator it = ss.m_mapFunc.begin();
-	for (;it!=ss.m_mapFunc.end();it++)
-	{
-		m_mapFunc.insert(std::make_pair(it->first,it->second));
+	for (; it != ss.m_mapFunc.end(); it++) {
+		m_mapFunc.insert(std::make_pair(it->first, it->second));
 	}
 }
 
@@ -131,7 +130,7 @@ void CClientSocket::threadFunc2() {
 	while (::GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		TRACE("Get Message:%08X \r\n",msg.message);
+		TRACE("Get Message:%08X \r\n", msg.message);
 		if (m_mapFunc.find(msg.message) != m_mapFunc.end()) {
 			(this->*m_mapFunc[msg.message])(msg.message, msg.wParam, msg.lParam);
 		}
@@ -245,7 +244,9 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 	//定义一个消息的数据结构(数据,数据长度，模式),回调消息的数据结构(HWND)
 	PACKET_DATA data = *(PACKET_DATA*)wParam;
 	delete (PACKET_DATA*)wParam;
+	size_t nTemp = data.strData.size();
 	HWND hWnd = (HWND)lParam;
+	CPacket current((BYTE*)data.strData.c_str(), nTemp);
 	if (initSocket() == TRUE) {
 		int ret = send(m_sock, (char*)data.strData.c_str(), (int)data.strData.size(), 0);
 		if (ret > 0) {
@@ -253,26 +254,28 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 			std::string strBuffer;
 			strBuffer.resize(BUFFER_SIZE);
 			char* pBuffer = (char*)strBuffer.c_str();
-			while (m_sock!=INVALID_SOCKET)
-			{
-				int length = recv(m_sock, pBuffer+index, BUFFER_SIZE-index, 0);
+			while (m_sock != INVALID_SOCKET) {
+				int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
 				if ((length > 0) || (index > 0)) {
 					index += (size_t)length;
 					size_t nLen = index;
-					CPacket pack((BYTE*)pBuffer,nLen);
+					CPacket pack((BYTE*)pBuffer, nLen);
 					if (nLen > 0) {
+						TRACE("ack pack %d to hWnd %08X i:%d len:%d\r\n", pack.sCmd, hWnd, index, nLen);
+						TRACE("%04X\r\n", *(WORD*)(pBuffer + nLen));
 						::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(pack), data.wParam);
 						if (data.nMode & CSM_AUTOCLOSE) {
 							CloseSocket();
 							return;
-						}		
+						}
+						index -= nLen;
+						memmove(pBuffer, pBuffer + nLen, index);
 					}
-					index -= nLen;
-					memmove(pBuffer, pBuffer + index, nLen);
 				}
 				else {//TODO:对方关闭套接字或者网络设备异常
+					TRACE("recv failed length %d index %d\r\n");
 					CloseSocket();
-					::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, 1);
+					::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(current.sCmd, NULL, 0), 1);
 				}
 			}
 		}
@@ -286,14 +289,14 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 		//TODO:init 错误处理
 		::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -2);
 	}
-	
+
 }
-BOOL CClientSocket::SendPacket(HWND hWnd,const CPacket& pack, BOOL isAutoClosed, WPARAM wParam) {
+BOOL CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, BOOL isAutoClosed, WPARAM wParam) {
 	UINT nMode = isAutoClosed ? CSM_AUTOCLOSE : 0;
 	std::string strOut;
 	pack.Data(strOut);
 	PACKET_DATA* pData = new PACKET_DATA(strOut.c_str(), strOut.size(), nMode, wParam);
-	BOOL ret = PostThreadMessage(m_nThreadID, WM_SEND_PACK,(WPARAM)pData,(LPARAM)hWnd);
+	BOOL ret = PostThreadMessage(m_nThreadID, WM_SEND_PACK, (WPARAM)pData, (LPARAM)hWnd);
 	if (ret == FALSE) delete pData;
 	return ret;
 }

@@ -192,8 +192,6 @@ void CRemoteClientDlg::LoadFileCurrent() {
 #else
 	int nCmd = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength());
 #endif //#ifdef _UNICODE
-
-	/// todo???
 	PFILEINFO pInfo = (PFILEINFO)CClientSocket::getInstance()->getPacket().strData.c_str();
 	while (pInfo->HasNext) {
 		TRACE("OnNMDblclkTreeDir(): %s isDir:%s\r\n",
@@ -238,7 +236,6 @@ void CRemoteClientDlg::DeleteTreeChildrenItem(HTREEITEM hTree) {
 }
 
 void CRemoteClientDlg::LoadFileInfo() {
-
 	CPoint ptMouse;
 	GetCursorPos(&ptMouse);
 	m_Tree.ScreenToClient(&ptMouse);
@@ -250,35 +247,15 @@ void CRemoteClientDlg::LoadFileInfo() {
 	DeleteTreeChildrenItem(hTreeSelected);
 	m_List.DeleteAllItems();
 	CString strPath = GetPath(hTreeSelected);
-	std::list<CPacket> lstPacket;
+	TRACE("hSelected %08X\r\n", hTreeSelected);
 #ifdef _UNICODE
 	CStringA strPathA(strPath);
-	int nCmd = CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 
-		2, FALSE, (BYTE*)(LPCSTR)strPathA, strPathA.GetLength(), (WPARAM)hTreeSelected);
+	CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(),2, FALSE, 
+		(BYTE*)(LPCSTR)strPathA, strPathA.GetLength(), (WPARAM)hTreeSelected);
 #else
-	int nCmd = CClientController::getInstance()->SendCommandPacket(
-		2, FALSE, (BYTE*)(LPCTSTR)strPath, strPath.GetLength(), (WPARAM)hTreeSelected);
+	CClientController::getInstance()->SendCommandPacket(GetSafeHwnd(), 2, FALSE,
+		(BYTE*)(LPCTSTR)strPath, strPath.GetLength(), (WPARAM)hTreeSelected);
 #endif //#ifdef _UNICODE
-	if (lstPacket.size() > 0) {
-		TRACE("lstPackets.size = %d\r\n",lstPacket.size());
-		std::list<CPacket>::iterator it = lstPacket.begin();
-		for (; it != lstPacket.end(); it++) {
-			PFILEINFO pInfo = (PFILEINFO)(*it).strData.c_str();
-			if (pInfo->HasNext == FALSE) continue;
-			if (pInfo->IsDirectory) {
-				if (CString(pInfo->szFileName) == "." || CString(pInfo->szFileName) == "..") {
-					continue;
-				}
-				CString strFileName(pInfo->szFileName);
-				HTREEITEM hTemp = m_Tree.InsertItem(strFileName, hTreeSelected, TVI_LAST);
-				m_Tree.InsertItem(_T(""), hTemp, TVI_LAST);
-			}
-			else {
-				CString strFormatted(pInfo->szFileName);
-				m_List.InsertItem(0, strFormatted);
-			}
-		}
-	}
 }
 
 
@@ -434,14 +411,18 @@ LRESULT CRemoteClientDlg::OnSendPacketAck(WPARAM wParam, LPARAM lParam) {
 			case 2://获取文件信息
 			{
 				PFILEINFO pInfo = (PFILEINFO)head.strData.c_str();
+				TRACE("hasNext:%d IsDir:%d fn:%s\r\n",pInfo->HasNext,pInfo->IsDirectory,pInfo->szFileName);
 				if (pInfo->HasNext == FALSE) break;
 				if (pInfo->IsDirectory) {
 					if (CString(pInfo->szFileName) == "." || CString(pInfo->szFileName) == "..") {
 						break;
 					}
+					TRACE("hSelected %08X\r\n",lParam);
 					CString strFileName(pInfo->szFileName);
 					HTREEITEM hTemp = m_Tree.InsertItem(strFileName, (HTREEITEM)lParam, TVI_LAST);
 					m_Tree.InsertItem(_T(""), hTemp, TVI_LAST);
+					m_Tree.Expand((HTREEITEM)lParam, TVE_EXPAND);
+
 				}
 				else {
 					CString strFormatted(pInfo->szFileName);
@@ -454,25 +435,33 @@ LRESULT CRemoteClientDlg::OnSendPacketAck(WPARAM wParam, LPARAM lParam) {
 				break;
 			case 4: 
 			{
-				static LONGLONG length = 0,index = 0;
-				if (length == 0) {
-					length = *(LONGLONG*)head.strData.c_str();
-					if (length == 0) {
-						AfxMessageBox(_T("文件长度为0，无法读取文件!"));
-						CClientController::getInstance()->DownloadEnd();
+				static LONGLONG length = 0,index = 0;//length 文件长度  index 已经写入长度
+				TRACE("length %d index %d\r\n", length, index);
+				if (length == 0) {//文件长度为0 当收到第一个包 文件长度包时
+					length = *(long long*)head.strData.c_str();
+					if (length == 0 && head.nLength > 4)//防止服务器结束标记包会弹框
+					{
+						AfxMessageBox(_T("文件长度为零或者无法读取文件!!!"));
+						CClientController::getInstance()->DownloadEnd();//结束下载
 						break;
 					}
 				}
-				else if ((length > 0) || (index >= length)) {
+				else if ((length > 0) && (index >= length)) {//文件全部写入完成
 					fclose((FILE*)lParam);
 					length = 0;
 					index = 0;
 					CClientController::getInstance()->DownloadEnd();
 				}
-				else {
+				else {//写入文件
 					FILE* pFile = (FILE*)lParam;
 					fwrite(head.strData.c_str(),1,head.strData.size(),pFile);
 					index += head.strData.size();
+					if (index >= length) {
+						fclose((FILE*)lParam);//关闭文件
+						length = 0;
+						index = 0;
+						CClientController::getInstance()->DownloadEnd();//结束下载
+					}
 				}
 				break;
 			}
