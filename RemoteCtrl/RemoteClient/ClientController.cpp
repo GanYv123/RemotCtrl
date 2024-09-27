@@ -117,28 +117,22 @@ void CClientController::StartWatchScreen() {
 }
 
 void CClientController::threadWatchScreen() {
-	//可能存在异步问题导致程序崩溃
 	Sleep(50);
+	ULONGLONG nTick = GetTickCount64();
 	while (!m_isClosed) {
 		if (m_watchDlg.isFull() == FALSE) {//如果缓存为空，放入缓存
-			std::list<CPacket> lstPacks;
+			if (GetTickCount64() - nTick < 200) {
+				Sleep(200 - (DWORD)(GetTickCount64() - nTick));
+			}
+			nTick = GetTickCount64();
 			int ret = SendCommandPacket(m_watchDlg.GetSafeHwnd(),6,true,NULL,0);
 			//TODO:添加消息响应函数WM_SEND_PACKACK
 			//TODO:控制发送频率
-			if (ret == 6) {	
-				if (CEdoyunTool::Byte2Image(m_watchDlg.GetImage(),
-					lstPacks.front().strData) == 0) 
-				{
-					m_watchDlg.setImageStatus(TRUE);
-					TRACE("成功加载图片： %08x\r\n",(HBITMAP)m_watchDlg.GetImage());
-					TRACE("和校验： %08x\r\n",lstPacks.front().sSum);
-				}
-				else {
-					TRACE(_T("获取图片失败!\r\n"));
-				}
+			if (ret == 1) {	
+				//TRACE("成功发送请求图片命令\r\n");
 			}
 			else {
-				Sleep(1);//预防CPU飙高
+				TRACE("获取图片失败\r\n");
 			}
 		}
 		else {

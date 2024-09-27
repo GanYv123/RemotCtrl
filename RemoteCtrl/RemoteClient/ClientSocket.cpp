@@ -292,8 +292,9 @@ BOOL CClientSocket::SendPacket(HWND hWnd,const CPacket& pack, BOOL isAutoClosed,
 	UINT nMode = isAutoClosed ? CSM_AUTOCLOSE : 0;
 	std::string strOut;
 	pack.Data(strOut);
-	BOOL ret = PostThreadMessage(m_nThreadID, WM_SEND_PACK,
-		(WPARAM)(new PACKET_DATA(strOut.c_str(),strOut.size(),nMode, wParam)),(LPARAM)hWnd);
+	PACKET_DATA* pData = new PACKET_DATA(strOut.c_str(), strOut.size(), nMode, wParam);
+	BOOL ret = PostThreadMessage(m_nThreadID, WM_SEND_PACK,(WPARAM)pData,(LPARAM)hWnd);
+	if (ret == FALSE) delete pData;
 	return ret;
 }
 
