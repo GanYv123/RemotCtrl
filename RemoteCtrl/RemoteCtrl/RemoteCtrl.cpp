@@ -15,6 +15,46 @@
 CWinApp theApp;
 using namespace std;
 
+void ChooseAutoInvoke() {
+	CString strSubKey = _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run");
+	CString strInfo = _T("该程序只允许用于合法的用途!\n");
+	strInfo += _T("继续运行该程序，将使得该机器处于被监控状态\n");
+	strInfo += _T("按下\"取消\"按钮 结束操作 退出程序！\n");
+	strInfo += _T("按下\"是\"按钮 会将程序复制到机器上，并随系统启动而自动运行!\n");
+	strInfo += _T("按下\"否\"按钮 将只会运行一次!\n");
+	int ret = MessageBox(NULL, strInfo, _T("警告"), MB_YESNOCANCEL | MB_ICONWARNING | MB_TOPMOST);
+	if (ret == IDYES) {
+		char sPath[MAX_PATH] = "";
+		char sSys[MAX_PATH] = "";
+		std::string strExe = "\\RemoteCtrl.exe ";
+		GetCurrentDirectoryA(MAX_PATH, sPath);
+		GetSystemDirectoryA(sSys, sizeof(sSys));
+		std::string strCmd = "mklink " + std::string(sSys) + strExe + std::string(sPath) + strExe;
+		system(strCmd.c_str());
+		HKEY hKey = NULL;
+		ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, strSubKey,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hKey);
+		if (ret != ERROR_SUCCESS) {
+			RegCloseKey(hKey);
+			MessageBox(NULL,_T("设置开机启动失败!是否权限不足?\r\n程序启动失败!"),_T("错误"),MB_ICONERROR|MB_TOPMOST);
+			exit(0);
+		}
+		CString strPath = CString(_T("%SystemRoot%\\SysWOW64\\RemoteCtrl.exe"));
+		ret = RegSetValueEx(hKey, _T("RemoteCtrl"), 0,REG_EXPAND_SZ,
+			(BYTE*)(LPCTSTR)strPath,strPath.GetLength()*sizeof(TCHAR));
+		if (ret != ERROR_SUCCESS) {
+			RegCloseKey(hKey);
+			MessageBox(NULL, _T("设置开机启动失败!是否权限不足?\r\n程序启动失败!"), _T("错误"), MB_ICONERROR | MB_TOPMOST);
+			exit(0);
+		}
+		RegCloseKey(hKey);
+
+	}
+	else if (ret == IDCANCEL) {
+		exit(0);
+	}
+	return;
+}
+
 int main() {
 	int nRetCode = 0;
 
@@ -29,9 +69,8 @@ int main() {
 		}
 		else {
 			CCommand cmd;
-			CServerSocket* pserver = CServerSocket::getInstance();
-			int ret = pserver->Run(&CCommand::RunCommand,&cmd);
-
+			ChooseAutoInvoke();
+			int ret = CServerSocket::getInstance()->Run(&CCommand::RunCommand, &cmd);
 			switch (ret) {
 			case -1:
 				MessageBox(NULL, _T("网络初始化异常，请检查网络状态!"), _T("网络初始化失败!"), MB_OK | MB_ICONERROR);
