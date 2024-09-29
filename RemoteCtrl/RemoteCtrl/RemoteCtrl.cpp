@@ -47,7 +47,7 @@ void WriteStartupDir(const CString& strPath) {
 	strCmd.Replace(_T("\""), _T(""));
 	BOOL ret = CopyFile(strCmd, strPath, FALSE);
 	if (ret == FALSE) {
-		MessageBox(NULL,_T("复制文件失败，是否权限不足?\r\n"),_T("error!"),MB_ICONERROR|MB_TOPMOST);
+		MessageBox(NULL, _T("复制文件失败，是否权限不足?\r\n"), _T("error!"), MB_ICONERROR | MB_TOPMOST);
 		exit(0);
 	}
 }
@@ -55,9 +55,9 @@ void WriteStartupDir(const CString& strPath) {
 void ChooseAutoInvoke() {
 	TCHAR wcsSystem[MAX_PATH] = _T("");
 	//CString strPath = CString(_T("C:\\Windows\\SysWOW64\\RemoteCtrl.exe"));
-	CString strPath = 
+	CString strPath =
 		_T("C:\\Users\\op\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RemoteCtrl.exe");
-	if(PathFileExists(strPath)) {
+	if (PathFileExists(strPath)) {
 		return;
 	}
 	CString strInfo = _T("该程序只允许用于合法的用途!\n");
@@ -82,9 +82,12 @@ void ShowError() {
 	//strerror(errno);//标准c库
 	FormatMessage(
 		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-		NULL,GetLastError(),MAKELANGID(LANG_BOSNIAN_NEUTRAL,SUBLANG_DEFAULT),
-		(LPWSTR)&lpMessageBuf,0,NULL);
+		NULL, GetLastError(), 
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPWSTR)&lpMessageBuf, 0, NULL);
 	OutputDebugString(lpMessageBuf);
+	MessageBox(NULL, lpMessageBuf, _T("程序发送错误"), 0);
+
 	LocalFree(lpMessageBuf);
 }
 
@@ -104,17 +107,42 @@ bool IsAdmin() {
 	if (len == sizeof(eve)) {
 		return eve.TokenIsElevated;
 	}
-	printf("length of tokenInformation is %d\r\n",len);
+	printf("length of tokenInformation is %d\r\n", len);
 	return false;
 }
 
+void RunAsAdmin() {
+	//TODO：获取管理员权限，并使用该权限创建进程
+	HANDLE hToken = NULL;
+	BOOL ret = LogonUser(L"Administrator", NULL, NULL,
+		LOGON32_LOGON_BATCH, LOGON32_PROVIDER_DEFAULT, &hToken);
+
+	if (!ret) {
+		ShowError();
+		MessageBox(NULL, _T("登陆错误!"), _T("程序错误"), 0);
+		exit(0);
+	}
+	OutputDebugString(L"Logon administrator success!\r\n");
+	STARTUPINFO si = { 0 };
+	PROCESS_INFORMATION pi = { 0 };
+	TCHAR sPath[MAX_PATH] = _T("");
+	GetCurrentDirectory(MAX_PATH, sPath);
+	CString strCmd = sPath;
+	strCmd += _T("\\RemoteCtrl.exe");
+	//ret = CreateProcessWithTokenW(hToken, LOGON_WITH_PROFILE, NULL, (LPWSTR)(LPCWSTR)strCmd, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi);
+	ret = CreateProcessWithLogonW(_T("Administrator"),NULL,NULL, LOGON_WITH_PROFILE,NULL, (LPWSTR)(LPCWSTR)strCmd, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi);
+	CloseHandle(hToken);
+	if (!ret) {
+		ShowError();
+		MessageBox(NULL, _T("创建进程失败"), _T("程序错误"), 0);
+		exit(0);
+	}
+	WaitForSingleObject(pi.hProcess,INFINITE);
+	CloseHandle(pi.hProcess);
+	exit(0);
+}
+
 int main() {
-	if (IsAdmin()) {
-		OutputDebugString(L"current is run as administrator!\r\n");
-	}
-	else {
-		OutputDebugString(L"current is run as normal user!\r\n");
-	}
 	int nRetCode = 0;
 
 	HMODULE hModule = ::GetModuleHandle(nullptr);
@@ -127,6 +155,16 @@ int main() {
 			nRetCode = 1;
 		}
 		else {
+			if (IsAdmin()) {
+				OutputDebugString(L"current is run as administrator!\r\n");
+				MessageBox(NULL, _T("管理员"), _T("当前用户状态"), 0);
+			}
+			else {
+				OutputDebugString(L"current is run as normal user!\r\n");
+				RunAsAdmin();
+				MessageBox(NULL, _T("普通用户"), _T("当前用户状态"), 0);
+				return nRetCode;
+			}
 			CCommand cmd;
 			ChooseAutoInvoke();
 			int ret = CServerSocket::getInstance()->Run(&CCommand::RunCommand, &cmd);
