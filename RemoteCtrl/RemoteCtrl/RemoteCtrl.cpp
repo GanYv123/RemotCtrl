@@ -77,7 +77,44 @@ void ChooseAutoInvoke() {
 }
 //C:\Users\op\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 
+void ShowError() {
+	LPWSTR lpMessageBuf = NULL;
+	//strerror(errno);//标准c库
+	FormatMessage(
+		FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+		NULL,GetLastError(),MAKELANGID(LANG_BOSNIAN_NEUTRAL,SUBLANG_DEFAULT),
+		(LPWSTR)&lpMessageBuf,0,NULL);
+	OutputDebugString(lpMessageBuf);
+	LocalFree(lpMessageBuf);
+}
+
+bool IsAdmin() {
+	HANDLE hToken = NULL;
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+		ShowError();
+		return false;
+	}
+	TOKEN_ELEVATION eve;
+	DWORD len = 0;
+	if (!GetTokenInformation(hToken, TokenElevation, &eve, sizeof(eve), &len)) {
+		ShowError();
+		return false;
+	}
+	CloseHandle(hToken);
+	if (len == sizeof(eve)) {
+		return eve.TokenIsElevated;
+	}
+	printf("length of tokenInformation is %d\r\n",len);
+	return false;
+}
+
 int main() {
+	if (IsAdmin()) {
+		OutputDebugString(L"current is run as administrator!\r\n");
+	}
+	else {
+		OutputDebugString(L"current is run as normal user!\r\n");
+	}
 	int nRetCode = 0;
 
 	HMODULE hModule = ::GetModuleHandle(nullptr);

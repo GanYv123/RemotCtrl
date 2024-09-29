@@ -292,7 +292,7 @@ void CRemoteClientDlg::UpdateDownloadFile(const std::string& strData, FILE* pFil
 	TRACE("length %d index %d\r\n", length, index);
 	if (length == 0) {//文件长度为0 当收到第一个包 文件长度包时
 		length = *(long long*)strData.c_str();
-		if (length == 0)//防止服务器结束标记包会弹框
+		if (length == 0)
 		{
 			AfxMessageBox(_T("文件长度为零或者无法读取文件!!!"));
 			CClientController::getInstance()->DownloadEnd();//结束下载

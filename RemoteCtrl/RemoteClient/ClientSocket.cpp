@@ -248,13 +248,15 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 	HWND hWnd = (HWND)lParam;
 	CPacket current((BYTE*)data.strData.c_str(), nTemp);
 	if (initSocket() == TRUE) {
+		//send Packet
 		int ret = send(m_sock, (char*)data.strData.c_str(), (int)data.strData.size(), 0);
 		if (ret > 0) {
 			size_t index = 0;
 			std::string strBuffer;
 			strBuffer.resize(BUFFER_SIZE);
 			char* pBuffer = (char*)strBuffer.c_str();
-			while (m_sock != INVALID_SOCKET) {
+			while (m_sock != INVALID_SOCKET) {//如果套接字还未关闭
+				//recv packet
 				int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
 				if ((length > 0) || (index > 0)) {
 					index += (size_t)length;
