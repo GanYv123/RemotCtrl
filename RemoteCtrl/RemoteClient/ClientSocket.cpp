@@ -56,74 +56,6 @@ unsigned CClientSocket::threadEntry(void* arg) {
 	return 0;
 }
 
-/*
-void CClientSocket::threadFunc() {
-	std::string strBuffer;
-	strBuffer.resize(BUFFER_SIZE);
-	char* pBuffer = (char*)strBuffer.c_str();
-	int index = 0;
-	initSocket();
-	while (m_sock != INVALID_SOCKET) {
-		if (m_lstSend.size() > 0) {
-			TRACE("lstSend size:%d\r\n", m_lstSend.size());
-			m_lock.lock();
-			CPacket& head = m_lstSend.front();
-			m_lock.unlock();
-			if (Send(head) == false) {
-				TRACE("发送失败\r\n");
-				continue;
-			}
-			std::map<HANDLE, std::list<CPacket>&>::iterator it;
-			it = m_mapAck.find(head.hEvent);
-			if (it != m_mapAck.end()) {
-				std::map<HANDLE, BOOL>::iterator it0 = m_mapAutoClosed.find(head.hEvent);
-				do {
-					int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-					TRACE("recv len:%d index:%d\r\n", length, index);
-					if ((length > 0) || (index > 0)) {
-						index += length;
-						size_t size = (size_t)index;
-						CPacket pack((BYTE*)pBuffer, size);
-						if (size > 0) {//TODO:文件夹信息获取可能产生问题
-							pack.hEvent = head.hEvent;
-							it->second.push_back(pack);//将消息存到队列设置singal
-							memmove(pBuffer, pBuffer + size, index - size);
-							index -= size;
-							TRACE("SetEvent %d %d\r\n", pack.sCmd, it0->second);
-							if (it0->second) {
-								SetEvent(head.hEvent);
-								break;
-							}
-						}
-					}
-					else if (length <= 0 && index <= 0) {
-						CloseSocket();
-						SetEvent(head.hEvent);//等到服务器关闭命令之后再通知事情完成
-						if (it0 != m_mapAutoClosed.end()) {
-							TRACE("SetEvent:%d %d\r\n", head.sCmd, it0->second);
-						}
-						else {
-							TRACE("异常的情况没有对应的pair\r\n");
-						}
-						break;
-					}
-				} while (it0->second == FALSE);
-			}
-
-			m_lock.lock();
-			m_lstSend.pop_front();
-			m_mapAutoClosed.erase(head.hEvent);
-			m_lock.unlock();
-
-			if (initSocket() == FALSE) {
-				initSocket();
-			}
-		}
-		Sleep(1);
-	}
-	CloseSocket();
-}
-//*/
 void CClientSocket::threadFunc2() {
 	SetEvent(m_eventInvoke);
 	MSG msg;
@@ -302,34 +234,6 @@ BOOL CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, BOOL isAutoClosed
 	if (ret == FALSE) delete pData;
 	return ret;
 }
-
-/*
-BOOL CClientSocket::SendPacket(const CPacket& pack, std::list<CPacket>& lstPacks, BOOL isAutoClosed) {
-	if (m_sock == INVALID_SOCKET && m_hThread == INVALID_HANDLE_VALUE) {
-		//if (initSocket() == false)  return FALSE;
-		m_hThread = (HANDLE)_beginthread(&CClientSocket::threadEntry, 0, this);
-		TRACE("Start thread:%d\r\n", m_hThread);
-	}
-	m_lock.lock();
-	auto pr = m_mapAck.insert(std::pair<HANDLE, std::list<CPacket>&>(pack.hEvent, lstPacks));
-	m_mapAutoClosed.insert(std::pair<HANDLE, BOOL>(pack.hEvent, isAutoClosed));
-	m_lstSend.push_back(pack);
-	m_lock.unlock();
-	TRACE("cmd:%d  event:%08x tID:%d\r\n", pack.sCmd, pack.hEvent, GetCurrentThreadId());
-	WaitForSingleObject(pack.hEvent, INFINITE);
-	TRACE("WaitS cmd:%d  event:%08x tID:%d\r\n", pack.sCmd, pack.hEvent, GetCurrentThreadId());
-
-	std::map<HANDLE, std::list<CPacket>&>::iterator it;
-	it = m_mapAck.find(pack.hEvent);
-	if (it != m_mapAck.end()) {
-		m_lock.lock();
-		m_mapAck.erase(it);
-		m_lock.unlock();
-		return TRUE;
-	}
-	return FALSE;
-}
-//*/
 BOOL CClientSocket::getFilePath(std::string& strPath) {
 	if ((m_packet.sCmd == 2)
 		|| (m_packet.sCmd == 3)

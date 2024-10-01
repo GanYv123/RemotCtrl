@@ -7,6 +7,7 @@
 #include "Command.h"
 #include "ServerSocket.h"
 #include "EdoyunTool.h"
+#include <conio.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -23,7 +24,7 @@ bool ChooseAutoInvoke(const CString& strPath) {
 	TCHAR wcsSystem[MAX_PATH] = _T("");
 
 	if (PathFileExists(strPath)) {
-		return FALSE;
+		return true;
 	}
 	CString strInfo = _T("该程序只允许用于合法的用途!\n");
 	strInfo += _T("继续运行该程序，将使得该机器处于被监控状态\n");
@@ -45,8 +46,114 @@ bool ChooseAutoInvoke(const CString& strPath) {
 }
 //C:\Users\op\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 
+HANDLE hIOCP = INVALID_HANDLE_VALUE;//IO Completion Port
+
+enum {
+	IocpListEmpty,
+	IocpListPush,
+	IocpListPop
+};
+
+typedef struct iocpParam {
+	int nOperator;//操作
+	std::string strData;//数据
+	_beginthread_proc_type cbFunc;//回调
+	iocpParam(int op, const char* sData, _beginthread_proc_type cb = NULL) {
+		nOperator = op;
+		strData = sData;
+		cbFunc = cb;
+	}
+	iocpParam() {
+		nOperator = -1;
+	}
+} IOCP_PARAM;
+
+void threadQueueEntry(HANDLE hIOCP) {
+	std::list<std::string> lstString;
+	DWORD dwTransferred = 0;
+	ULONG_PTR completionKey = NULL;
+	OVERLAPPED*pOverlapped = NULL;
+	while (GetQueuedCompletionStatus(hIOCP, &dwTransferred, &completionKey, &pOverlapped, INFINITE)) {
+		if ((dwTransferred == 0) || (completionKey == NULL)) {
+			printf("thread is prepare to exit;");
+			break;
+		}
+		IOCP_PARAM* pParam = (IOCP_PARAM*)completionKey;
+		if (pParam->nOperator == IocpListPush){
+			lstString.push_back(pParam->strData);
+		}
+		else if (pParam->nOperator == IocpListPop) {
+			std::string* pStr = NULL;
+			if (lstString.size() > 0) {
+				pStr = new std::string(lstString.front());
+				lstString.pop_front();
+			}
+			if (pParam->cbFunc) {
+				pParam->cbFunc(pStr);
+			}
+		}
+		else if (pParam->nOperator == IocpListEmpty) {
+			lstString.clear();
+		}
+		delete pParam;
+	}
+	_endthread();
+}
+
+void func(void* arg) {
+	std::string* pstr = (std::string*)arg;
+	if (pstr != NULL) {
+		printf("pop from list:%s\r\n", pstr->c_str());
+		delete pstr;
+	}
+	else {
+		printf("list is not data\r\n");
+	}
+}
 
 int main() {
+	if (!CEdoyunTool::Init()) return 1;
+
+	printf("press any key to exit...\r\n");
+	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
+	HANDLE hThread = (HANDLE)_beginthread(threadQueueEntry, 0, hIOCP);
+	
+	ULONGLONG tick = GetTickCount64();
+	while (_kbhit() != 0) {
+		if (GetTickCount64() - tick > 1300) {
+			PostQueuedCompletionStatus(
+				hIOCP,
+				sizeof(IOCP_PARAM),
+				(ULONG_PTR)new IOCP_PARAM(IocpListPop, "hello world"),
+				NULL
+			);
+		}
+
+		if (GetTickCount64() - tick > 2000) {
+			PostQueuedCompletionStatus(
+				hIOCP, 
+				sizeof(IOCP_PARAM), 
+				(ULONG_PTR)new IOCP_PARAM(IocpListPush, "hello world"),
+				NULL
+			);
+			tick = GetTickCount64();
+		}
+		Sleep(1);
+	}
+
+	
+	if (hIOCP != NULL) {
+		PostQueuedCompletionStatus(hIOCP, 0, NULL, NULL);
+		WaitForSingleObject(hThread, INFINITE);
+	}
+
+	if(hIOCP)
+		CloseHandle(hIOCP);
+
+	printf("exit done!\r\n");
+	exit(0);
+
+	/*//
 	if (CEdoyunTool::IsAdmin()) {
 		if (!CEdoyunTool::Init()) return 1;
 		if (ChooseAutoInvoke(INVOKE_PATH)) {
@@ -65,9 +172,9 @@ int main() {
 	else {
 		if (!CEdoyunTool::RunAsAdmin()) {
 			CEdoyunTool::ShowError();
+			return 1;
 		}
-		return 0;
 	}
-
+	//*/
 	return 0;
 }

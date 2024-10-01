@@ -111,7 +111,7 @@ public:
 		if (pi.hThread) {
 			CloseHandle(pi.hThread);
 		}
-		return TRUE;
+		return true;
 	}
 
 	/// <summary>
