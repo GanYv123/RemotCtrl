@@ -8,6 +8,7 @@
 #include "ServerSocket.h"
 #include "EdoyunTool.h"
 #include <conio.h>
+#include "CEdoyunQueue.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -119,56 +120,29 @@ void func(void* arg) {
 
 int main() {
 	if (!CEdoyunTool::Init()) return 1;
-
 	printf("press any key to exit...\r\n");
-	HANDLE hIOCP = INVALID_HANDLE_VALUE;//IO Completion Port
-	hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
-	if (hIOCP == INVALID_HANDLE_VALUE || (hIOCP == NULL)) {
-		printf("create iocp failed!%d\r\n", GetLastError());
-		return 1;
-	}
-	HANDLE hThread = (HANDLE)_beginthread(threadQueueEntry, 0, hIOCP);
-	
-	ULONGLONG tick = GetTickCount64();
 	ULONGLONG tick0 = GetTickCount64();
-	int count = 0, count0 = 0;
+	ULONGLONG tick = GetTickCount64();
 
+	CEdoyunQueue<std::string> lstStrings;
 	while (_kbhit() == 0) {
 		if (GetTickCount64() - tick0 > 1300) {
-			PostQueuedCompletionStatus(
-				hIOCP,
-				sizeof(IOCP_PARAM),
-				(ULONG_PTR)new IOCP_PARAM(IocpListPop, "hello world",func),
-				NULL
-			);
+			lstStrings.PushBack("hello world");
 			tick0 = GetTickCount64();
-			count0++;
 		}
 
 		if (GetTickCount64() - tick > 2000) {
-			PostQueuedCompletionStatus(
-				hIOCP, 
-				sizeof(IOCP_PARAM), 
-				(ULONG_PTR)new IOCP_PARAM(IocpListPush, "hello world"),
-				NULL
-			);
+			std::string str;
+			lstStrings.PopFront(str);
+			printf("pop from queue:%s\r\n", str.c_str());
 			tick = GetTickCount64();
-			count++;
 		}
 		Sleep(1);
 	}
 
-	
-	if (hIOCP != NULL) {
-		PostQueuedCompletionStatus(hIOCP, 0, NULL, NULL);
-		WaitForSingleObject(hThread, INFINITE);
-		printf("count0:%d  count:%d\r\n", count0, count);
-	}
-
-	if(hIOCP)
-		CloseHandle(hIOCP);
-
-	printf("exit done!\r\n");
+	printf("exit done!size %d\r\n",lstStrings.Size());
+	lstStrings.Clear();
+	printf("clear exit done!size %d\r\n", lstStrings.Size());
 	exit(0);
 
 	/*//
