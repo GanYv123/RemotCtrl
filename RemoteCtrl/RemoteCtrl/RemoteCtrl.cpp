@@ -118,32 +118,44 @@ void func(void* arg) {
 	}
 }
 
-int main() {
-	if (!CEdoyunTool::Init()) return 1;
-	printf("press any key to exit...\r\n");
+void TEST() {
 	ULONGLONG tick0 = GetTickCount64();
 	ULONGLONG tick = GetTickCount64();
+	ULONGLONG total = GetTickCount64();
 
 	CEdoyunQueue<std::string> lstStrings;
-	while (_kbhit() == 0) {
-		if (GetTickCount64() - tick0 > 1300) {
+	while (GetTickCount64() - total <= 1000) {
+		//if (GetTickCount64() - tick0 >= 5) 
+		{
 			lstStrings.PushBack("hello world");
 			tick0 = GetTickCount64();
 		}
-
-		if (GetTickCount64() - tick > 2000) {
+	}
+	size_t count = lstStrings.Size();
+	printf("push done! size %d\r\n", count);
+	total = GetTickCount64();
+	while (GetTickCount64() - total <= 1000) {
+		//if (GetTickCount64() - tick >= 5) 
+		{
 			std::string str;
 			lstStrings.PopFront(str);
-			printf("pop from queue:%s\r\n", str.c_str());
+			//printf("pop from queue:%s\r\n", str.c_str());
 			tick = GetTickCount64();
 		}
-		Sleep(1);
+		//Sleep(1);
 	}
+	printf("pop done! size %d\r\n", count - lstStrings.Size());
 
-	printf("exit done!size %d\r\n",lstStrings.Size());
+	printf("exit done!size %d\r\n", lstStrings.Size());
 	lstStrings.Clear();
 	printf("clear exit done!size %d\r\n", lstStrings.Size());
-	exit(0);
+}
+
+int main() {
+	if (!CEdoyunTool::Init()) return 1;
+	for (int i = 0; i <= 100; ++i) {
+		TEST();
+	}
 
 	/*//
 	if (CEdoyunTool::IsAdmin()) {

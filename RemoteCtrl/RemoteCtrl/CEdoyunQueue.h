@@ -3,6 +3,7 @@
 #include <atomic>
 /// <summary>
 /// 一个用IOCP实现的线程安全的队列
+/// pop 的效率只有 push 的四分之一
 /// </summary>
 /// <typeparam name="T">模板类型</typeparam>
 template<class T>
@@ -38,20 +39,19 @@ public:
 		m_hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 1);
 		m_hThread = INVALID_HANDLE_VALUE;
 		if (m_hCompletionPort != NULL) {
-			m_hThread = (HANDLE)_beginthread(
-				&CEdoyunQueue<T>::threadEntry, 
-				0, m_hCompletionPort
-			);
+			m_hThread = (HANDLE)_beginthread(&CEdoyunQueue<T>::threadEntry, 0, this);
 		}
 	}
 	~CEdoyunQueue() {
 		if (m_lock) return;
 		m_lock = true;
-		HANDLE hTemp = m_hCompletionPort;
 		PostQueuedCompletionStatus(m_hCompletionPort, 0, NULL, NULL);
 		WaitForSingleObject(m_hThread, INFINITE);
-		m_hCompletionPort = NULL;
-		CloseHandle(hTemp);
+		if (m_hCompletionPort != NULL) {
+			HANDLE hTemp = m_hCompletionPort;
+			m_hCompletionPort = NULL;
+			CloseHandle(hTemp);
+		}
 	}
 	bool  PushBack(const T& data) {
 		IocpParam* pParam = new IocpParam(EQPush, data);
@@ -61,10 +61,11 @@ public:
 		}
 		bool ret = PostQueuedCompletionStatus(
 			m_hCompletionPort, 
-			sizeof(PPARAM), (ULONG_PTR)&pParam,
+			sizeof(PPARAM), (ULONG_PTR)pParam,
 			NULL
 		);
 		if (ret == false) delete pParam;
+		//printf("push done!%08p\r\n", (void*)pParam);
 		return ret;
 	}
 	bool  PopFront(T& data) {
@@ -118,7 +119,7 @@ public:
 		IocpParam* pParam = new IocpParam(EQClear, T());
 		bool ret = PostQueuedCompletionStatus(
 			m_hCompletionPort,
-			sizeof(PPARAM), (ULONG_PTR)&pParam,
+			sizeof(PPARAM), (ULONG_PTR)pParam,
 			NULL
 		);
 		if (ret == false) delete pParam;
@@ -136,6 +137,7 @@ private:
 		case EQPush:
 			m_lstData.push_back(pParam->Data);
 			delete pParam;
+			//printf("delete done! %08p\r\n", (void*)pParam);
 			break;
 		case EQPop:
 			if (m_lstData.size() > 0) {
@@ -167,7 +169,7 @@ private:
 			GetQueuedCompletionStatus(m_hCompletionPort, &dwTransferred,
 				&CompletionKey, &pOverlapped, INFINITE)) {
 			if ((dwTransferred == 0) || (CompletionKey == NULL)) {
-				printf("thread is prepare to exit;");
+				printf("thread is prepare to exit;\r\n");
 				break;
 			}
 			pParam = (PPARAM*)CompletionKey;
@@ -176,13 +178,16 @@ private:
 		while (GetQueuedCompletionStatus(m_hCompletionPort, &dwTransferred,
 			&CompletionKey, &pOverlapped, 0)) {
 			if ((dwTransferred == 0) || (CompletionKey == NULL)) {
-				printf("thread is prepare to exit;");
+				printf("thread is prepare to exit;\r\n");
 				continue;
 			}
 			pParam = (PPARAM*)CompletionKey;
 			DealParam(pParam);
 		}
-		CloseHandle(m_hCompletionPort);
+		HANDLE hTemp = m_hCompletionPort;
+		m_hCompletionPort = NULL;
+		CloseHandle(hTemp);
+
 	}
 
 private:
