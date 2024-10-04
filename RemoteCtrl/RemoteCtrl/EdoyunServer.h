@@ -16,85 +16,90 @@ enum EdoyunOperator {
 };
 
 class EdoyunServer;
+class EdoyunOverlapped;
 class EdoyunClient;
 typedef std::shared_ptr<EdoyunClient> PCLIENT;
 
-class EOverlapped {
+
+class EdoyunOverlapped {
 public:
 	OVERLAPPED m_overlapped;
-	DWORD m_operator;
-	std::vector<char> m_buffer;
-	ThreadWorker m_worker;
-	EdoyunServer* m_server;
-	EOverlapped():  m_server() {
-		m_operator = 0;
-		memset(&m_overlapped, 0, sizeof(OVERLAPPED));
-		memset(&m_buffer, 0, sizeof(m_buffer));
-	}
+	DWORD m_operator;			//操作见（EdoyunOperator）
+	std::vector<char> m_buffer;	//缓冲区
+	ThreadWorker m_worker;		//处理函数
+	EdoyunServer* m_server;		//服务器对象
+	PCLIENT m_client;			//对应的客户端
+	WSABUF m_wsaBuffer;
+
+
+ 	EdoyunOverlapped():  m_server() {
+ 		m_operator = 0;
+ 		memset(&m_overlapped, 0, sizeof(OVERLAPPED));
+ 		memset(&m_buffer, 0, sizeof(m_buffer));
+ 		memset(&m_wsaBuffer, 0, sizeof(m_wsaBuffer));
+ 	}
 
 };
+template <EdoyunOperator>class AcceptOverlapped;
+typedef AcceptOverlapped<EAccept> ACCEPTOVERLAPPED;
+
+template <EdoyunOperator>class SendOverlapped;
+typedef SendOverlapped<ESend> SENDOVERLAPPED;
+
+template <EdoyunOperator>class RecvOverlapped;
+typedef RecvOverlapped<ERecv> RECVOVERLAPPED;
 
 // EAccept
-template <EdoyunOperator op>
-class AcceptOverlapped :public EOverlapped, ThreadFuncBase {
+template <EdoyunOperator>
+class AcceptOverlapped :public EdoyunOverlapped, ThreadFuncBase {
 public:
 	AcceptOverlapped();
 	int AcceptWorker();
-	PCLIENT m_client;
+	//PCLIENT m_client;
 private:
 
 };
-typedef AcceptOverlapped<EAccept> ACCEPTOVERLAPPED;
 
-// ERecv
+//Recv
 template <EdoyunOperator>
-class RecvOverlapped :public EOverlapped, ThreadFuncBase {
+class RecvOverlapped :public EdoyunOverlapped, ThreadFuncBase {
 public:
-	RecvOverlapped() :
-		m_operator(EAccept),
-		m_worker(this, &RecvOverlapped::RecvWorker) {
-		memset(&m_overlapped, 0, sizeof(m_overlapped));
-		m_buffer.resize(1024 * 256);
-	}
+	RecvOverlapped();
 	int RecvWorker() {
-		// TODO
+		int ret = m_client->Recv();
+		return ret;
 	}
 private:
 
 };
-typedef RecvOverlapped<ERecv> RECVOVERLAPPED;
 
-// ESend
+//Send
 template <EdoyunOperator>
-class SendOverlapped :public EOverlapped, ThreadFuncBase {
+class SendOverlapped :public EdoyunOverlapped, ThreadFuncBase {
 public:
-	SendOverlapped() :
-		m_operator(ESend),
-		m_worker(this, &SendOverlapped::SendWorker) {
-		memset(&m_overlapped, 0, sizeof(m_overlapped));
-		m_buffer.resize(1024 * 256);
-	}
+	SendOverlapped();
 	int SendWorker() {
 		// TODO
+		return -1;
 	}
 private:
 
 };
-typedef SendOverlapped<ESend> SENDOVERLAPPED;
 
 
-// EAccept
+//error
 template <EdoyunOperator>
-class ErrorOverlapped :public EOverlapped, ThreadFuncBase {
+class ErrorOverlapped :public EdoyunOverlapped, ThreadFuncBase {
 public:
 	ErrorOverlapped() :
-		m_operator(EAccept),
+		m_operator(EError),
 		m_worker(this, &ErrorOverlapped::ErrorWorker) {
 		memset(&m_overlapped, 0, sizeof(m_overlapped));
 		m_buffer.resize(1024);
 	}
 	int ErrorWorker() {
 		// TODO
+		return -1;
 	}
 private:
 
@@ -110,7 +115,9 @@ public:
 	}
 
 	void SetOverlapped(PCLIENT& ptr) {
-		m_overlapped.m_client = ptr;
+		m_overlapped->m_client = ptr;
+		m_recv->m_client = ptr;
+		m_send->m_client = ptr;
 	}
 
 	operator SOCKET() {
@@ -120,20 +127,34 @@ public:
 		return &m_buffer[0];
 	}
 	operator LPOVERLAPPED() {
-		return &m_overlapped.m_overlapped;
+		return &m_overlapped->m_overlapped;
 	}
 	operator LPDWORD() {
 		return &m_received;
 	}
+	LPWSABUF RecvWSABuffer();
+	LPWSABUF SendWSABuffer();
 
+	DWORD& flags() { return m_flags; };
 	sockaddr_in* GetLocalAddr() { return &m_laddr; }
 	sockaddr_in* GetRemoteAddr() { return &m_raddr; }
-
+	size_t GetBufferSize()const { return m_buffer.size(); };
+	int Recv() {
+		int ret = recv(m_sock, m_buffer.data()+m_used, m_buffer.size()-m_used, 0);
+		if (ret <= 0) return -1;
+		m_used += (size_t)ret;
+		//TODO:解析数据
+		return 0;
+	}
 private:
 	SOCKET m_sock;
 	DWORD m_received;
-	ACCEPTOVERLAPPED m_overlapped;
+	DWORD m_flags;
+	std::shared_ptr<ACCEPTOVERLAPPED> m_overlapped;
+	std::shared_ptr<RECVOVERLAPPED> m_recv;
+	std::shared_ptr<SENDOVERLAPPED> m_send;
 	std::vector<char> m_buffer;
+	size_t m_used;//已经使用的缓冲区大小
 	sockaddr_in m_laddr;
 	sockaddr_in m_raddr;
 	bool isBusy;
@@ -148,43 +169,14 @@ public:
 		m_addr.sin_port = htons(port);
 		m_addr.sin_addr.s_addr = inet_addr(ip.c_str());
 	}
-	bool StartServer() {
-		CreateSocket();
-		if (bind(m_sock, (sockaddr*)&m_addr, sizeof(m_addr)) == false) {
-			closesocket(m_sock);
-			m_sock = INVALID_SOCKET;
-			return false;
-		}
-		if (listen(m_sock, 3) == -1) {
-			closesocket(m_sock);
-			m_sock = INVALID_SOCKET;
-			return false;
-		}
-		m_hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 4);
-		if (m_hIOCP == NULL || m_hIOCP == INVALID_HANDLE_VALUE) {
-			closesocket(m_sock);
-			m_sock = INVALID_SOCKET;
-			m_hIOCP = INVALID_HANDLE_VALUE;
-			return false;
-		}
-		CreateIoCompletionPort((HANDLE)m_sock, m_hIOCP, (ULONG_PTR)this, 0);
-		m_pool.Invoke();
-		m_pool.DispatchWorker(ThreadWorker(this, (FUNCTYPE)&EdoyunServer::threadIocp));
-		return NewAccept();
-	}
+	bool StartServer();
+
 	~EdoyunServer() {}
-public:
-	void CreateSocket() {
-		m_sock = WSASocket(PF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-		int opt = 1;
-		setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
-	}
 
 	bool NewAccept() {
 		PCLIENT pClient(new EdoyunClient());
 		pClient->SetOverlapped(pClient);
 		m_client.insert(std::pair <SOCKET, PCLIENT>(*pClient, pClient));
-
 		if (!AcceptEx(m_sock, *pClient, *pClient, 0,
 			sizeof(sockaddr_in) + 16, sizeof(sockaddr_in) + 16, *pClient, *pClient)) {
 			closesocket(m_sock);
@@ -195,50 +187,16 @@ public:
 		return true;
 	}
 
-	int threadIocp() {
-		DWORD transfer = 0;
-		ULONG_PTR compKey = 0;
-		OVERLAPPED* lpOver = NULL;
-		if (GetQueuedCompletionStatus(m_hIOCP, &transfer, &compKey, &lpOver, INFINITE)) {
-			EOverlapped* pO = CONTAINING_RECORD(lpOver, EOverlapped, m_overlapped);
-			if (transfer > 0 && compKey != 0) {
-				EOverlapped* pO = CONTAINING_RECORD(lpOver, EOverlapped, m_overlapped);
-				switch (pO->m_operator) {
-				case EAccept:
-				{
-					ACCEPTOVERLAPPED* pOver = (ACCEPTOVERLAPPED*)pO;
-					m_pool.DispatchWorker(pOver->m_worker);
-					break;
-				}
-				case ERecv:
-				{
-					RECVOVERLAPPED* pOver = (RECVOVERLAPPED*)pO;
-					m_pool.DispatchWorker(pOver->m_worker);
-					break;
-				}
-				case ESend:
-				{
-					SENDOVERLAPPED* pOver = (SENDOVERLAPPED*)pO;
-					m_pool.DispatchWorker(pOver->m_worker);
-					break;
-				}
-				case EError:
-				{
-					ERROROVERLAPPED* pOver = (ERROROVERLAPPED*)pO;
-					m_pool.DispatchWorker(pOver->m_worker);
-					break;
-				}
-				default:
-					break;
-				}
-			}
-			else {
-				return -1;
-			}
 
-		}
-		return -2;
+private:
+	void CreateSocket() {
+		m_sock = WSASocket(PF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+		int opt = 1;
+		setsockopt(m_sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
 	}
+
+
+	int threadIocp();
 public:
 	EdoyunThreadPool m_pool;
 	HANDLE m_hIOCP;
