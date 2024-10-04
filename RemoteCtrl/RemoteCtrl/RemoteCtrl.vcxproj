@@ -142,6 +142,8 @@
   <ItemGroup>
     <ClInclude Include="CEdoyunQueue.h" />
     <ClInclude Include="Command.h" />
+    <ClInclude Include="EdoyunServer.h" />
+    <ClInclude Include="EdoyunThread.h" />
     <ClInclude Include="EdoyunTool.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="LockInfoDialog.h" />
@@ -154,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Command.cpp" />
+    <ClCompile Include="EdoyunServer.cpp" />
     <ClCompile Include="EdoyunTool.cpp" />
     <ClCompile Include="LockInfoDialog.cpp" />
     <ClCompile Include="pch.cpp">

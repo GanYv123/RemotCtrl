@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include <atomic>
+#include <list>
 /// <summary>
 /// 一个用IOCP实现的线程安全的队列
 /// pop 的效率只有 push 的四分之一

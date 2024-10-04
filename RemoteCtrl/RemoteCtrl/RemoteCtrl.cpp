@@ -13,6 +13,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#include "EdoyunServer.h"
 
 #define INVOKE_PATH _T("C:\\Users\\op\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\RemoteCtrl.exe")
 //#define INVOKE_PATH _T("C:\\Windows\\SysWOW64\\RemoteCtrl.exe")
@@ -45,117 +46,16 @@ bool ChooseAutoInvoke(const CString& strPath) {
 	}
 	return true;
 }
-//C:\Users\op\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 
-enum {
-	IocpListEmpty,
-	IocpListPush,
-	IocpListPop
-};
 
-typedef struct iocpParam {
-	int nOperator;//操作
-	std::string strData;//数据
-	_beginthread_proc_type cbFunc;//回调
-	iocpParam(int op, const char* sData, _beginthread_proc_type cb = NULL) {
-		nOperator = op;
-		strData = sData;
-		cbFunc = cb;
-	}
-	iocpParam() {
-		nOperator = -1;
-	}
-} IOCP_PARAM;
-
-void threadmain(HANDLE hIOCP) {
-	std::list<std::string> lstString;
-	DWORD dwTransferred = 0;
-	ULONG_PTR completionKey = NULL;
-	OVERLAPPED* pOverlapped = NULL;
-	int count = 0, count0 = 0;
-	while (GetQueuedCompletionStatus(hIOCP, &dwTransferred, &completionKey, &pOverlapped, INFINITE)) {
-		if ((dwTransferred == 0) || (completionKey == NULL)) {
-			printf("thread is prepare to exit;");
-			break;
-		}
-		IOCP_PARAM* pParam = (IOCP_PARAM*)completionKey;
-		if (pParam->nOperator == IocpListPush) {
-			lstString.push_back(pParam->strData);
-			count++;
-		}
-		else if (pParam->nOperator == IocpListPop) {
-			std::string* pStr = NULL;
-			if (lstString.size() > 0) {
-				pStr = new std::string(lstString.front());
-				lstString.pop_front();
-			}
-			if (pParam->cbFunc) {
-				pParam->cbFunc(pStr);
-			}
-			count0++;
-		}
-		else if (pParam->nOperator == IocpListEmpty) {
-			lstString.clear();
-		}
-		delete pParam;
-		printf("thread count0:%d  count:%d\r\n", count0, count);
-	}
-}
-
-void threadQueueEntry(HANDLE hIOCP) {
-	threadmain(hIOCP);
-	_endthread();
-}
-
-void func(void* arg) {
-	std::string* pstr = (std::string*)arg;
-	if (pstr != NULL) {
-		printf("pop from list:%s\r\n", pstr->c_str());
-		delete pstr;
-	}
-	else {
-		printf("list is not data\r\n");
-	}
-}
-
-void TEST() {
-	ULONGLONG tick0 = GetTickCount64();
-	ULONGLONG tick = GetTickCount64();
-	ULONGLONG total = GetTickCount64();
-
-	CEdoyunQueue<std::string> lstStrings;
-	while (GetTickCount64() - total <= 1000) {
-		//if (GetTickCount64() - tick0 >= 5) 
-		{
-			lstStrings.PushBack("hello world");
-			tick0 = GetTickCount64();
-		}
-	}
-	size_t count = lstStrings.Size();
-	printf("push done! size %d\r\n", count);
-	total = GetTickCount64();
-	while (GetTickCount64() - total <= 1000) {
-		//if (GetTickCount64() - tick >= 5) 
-		{
-			std::string str;
-			lstStrings.PopFront(str);
-			//printf("pop from queue:%s\r\n", str.c_str());
-			tick = GetTickCount64();
-		}
-		//Sleep(1);
-	}
-	printf("pop done! size %d\r\n", count - lstStrings.Size());
-
-	printf("exit done!size %d\r\n", lstStrings.Size());
-	lstStrings.Clear();
-	printf("clear exit done!size %d\r\n", lstStrings.Size());
+void iocp() {
+	EdoyunServer server;
+	server.StartServer();
+	getchar();
 }
 
 int main() {
 	if (!CEdoyunTool::Init()) return 1;
-	for (int i = 0; i <= 100; ++i) {
-		TEST();
-	}
 
 	/*//
 	if (CEdoyunTool::IsAdmin()) {
