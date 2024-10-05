@@ -50,13 +50,13 @@ bool ChooseAutoInvoke(const CString& strPath) {
 
 void iocp() {
 	EdoyunServer server;
-	server.StartServer();
+	server.StartService();
 	getchar();
 }
 
 int main() {
 	if (!CEdoyunTool::Init()) return 1;
-
+	iocp();
 	/*//
 	if (CEdoyunTool::IsAdmin()) {
 		if (!CEdoyunTool::Init()) return 1;
