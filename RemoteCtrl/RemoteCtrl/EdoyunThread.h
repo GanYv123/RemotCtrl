@@ -89,24 +89,31 @@ public:
 
 	//true 空闲； false 已经分配工作;
 	bool IsIdle() {
-		return m_worker.load()->IsValid();
+		if (m_worker.load() == NULL) return true;
+		return !m_worker.load()->IsValid();
 
 	}
 
 private:
 	void ThreadWorker() {
 		while (m_bStatus) {
+			if (m_worker.load() == NULL) {
+				Sleep(1);
+				continue;
+			}
 			::ThreadWorker worker = *m_worker.load();
 			if (worker.IsValid()) {
-				int ret = worker();
-				if (ret != 0) {
-					CString str;
-					str.Format(_T("thread found warning code %d\r\n"), ret);
-					OutputDebugString(str);
-				}
-				if (ret < 0) {
-					m_worker.store(NULL);
-				}
+				if (WaitForSingleObject(m_hThread, 0) == WAIT_TIMEOUT) {
+					int ret = worker();
+					if (ret != 0) {
+						CString str;
+						str.Format(_T("thread found warning code %d\r\n"), ret);
+						OutputDebugString(str);
+					}
+					if (ret < 0) {
+						m_worker.store(NULL);
+					}
+				}	
 			}
 			else {
 				Sleep(1);

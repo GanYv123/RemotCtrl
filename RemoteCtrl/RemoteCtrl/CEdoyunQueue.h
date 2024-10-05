@@ -38,7 +38,7 @@ public:
 				&CEdoyunQueue<T>::threadEntry, 0, this);
 		}
 	}
-	virtual~CEdoyunQueue() {
+	virtual ~CEdoyunQueue() {
 		if (m_lock)return;
 		m_lock = true;
 
@@ -195,7 +195,7 @@ public:
 		m_thread.Start();
 		m_thread.UpdateWorker(::ThreadWorker(this, (FUNCTYPE)&EdoyunSendQueue<T>::threadTick));
 	}
-	virtual~EdoyunSendQueue() {
+	virtual ~EdoyunSendQueue() {
 		m_thread.Stop();
 		m_base = NULL;
 		m_callback = NULL;
