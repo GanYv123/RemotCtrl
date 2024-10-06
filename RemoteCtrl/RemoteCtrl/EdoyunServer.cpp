@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "EdoyunServer.h"
 #include "EdoyunTool.h"
+#pragma warning(disable:4407)
+
 template<EdoyunOperator op>
 AcceptOverlapped<op>::AcceptOverlapped() {
 	m_operator = EAccept;
@@ -98,7 +100,8 @@ int EdoyunClient::Recv() {
 	int ret = recv(m_sock, m_buffer.data() + m_used, m_buffer.size() - m_used, 0);
 	if (ret <= 0)return -1;
 	m_used += (size_t)ret;
-	CEdoyunTool::Dump((BYTE*)m_buffer.data(), ret);
+	CEdoyunTool
+		::Dump((BYTE*)m_buffer.data(), ret);
 	return 0;
 }
 

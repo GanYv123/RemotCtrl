@@ -1,12 +1,11 @@
 ﻿#pragma once
-#pragma warning(disable : 4996)
-#pragma warning(disable : 4407)
-
 #include<MSWSock.h>
 #include<Windows.h>
 #include "EdoyunThread.h"
 #include "CEdoyunQueue.h"
 #include<map>
+
+#pragma warning (disable:4996)
 
 enum EdoyunOperator {
 	ENone,
@@ -131,7 +130,7 @@ public:
 class EdoyunServer :
 	public ThreadFuncBase {
 public:
-	EdoyunServer(const std::string& ip = "0.0.0.0", short port = 9527) :m_pool(10) {
+	EdoyunServer(const std::string& ip = "0.0.0.0", short port = 2233) :m_pool(10) {
 		m_hIOCP = INVALID_HANDLE_VALUE;
 		m_sock = INVALID_SOCKET;
 		m_addr.sin_family = AF_INET;
