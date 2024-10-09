@@ -54,9 +54,47 @@ void iocp() {
 	getchar();
 }
 
-int main() {
+void udp_server();
+void udp_client(bool ishost = true);
+
+int main(int argc, char* argv[]) {
 	if (!CEdoyunTool::Init()) return 1;
-	iocp();
+
+	if (argc == 1) {
+		char wstrDir[MAX_PATH];
+		GetCurrentDirectoryA(MAX_PATH, wstrDir);
+		STARTUPINFOA si;
+		PROCESS_INFORMATION pi;
+		memset(&si, 0, sizeof(si));
+		memset(&pi, 0, sizeof(pi));
+		string strCmd = argv[0];
+		strCmd += " 1";
+		BOOL bRet = CreateProcessA(NULL, (LPSTR)strCmd.c_str(), NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, wstrDir, &si, &pi);
+		if (bRet) {
+			CloseHandle(pi.hThread);
+			CloseHandle(pi.hProcess);
+			TRACE("进程ID：%d\r\n", pi.dwProcessId);
+			TRACE("线程ID：%d\r\n", pi.dwThreadId);
+
+			strCmd += " 2";
+			bRet = CreateProcessA(NULL, (LPSTR)strCmd.c_str(), NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, wstrDir, &si, &pi);
+			if (bRet) {
+				CloseHandle(pi.hThread);
+				CloseHandle(pi.hProcess);
+				TRACE("进程ID：%d\r\n", pi.dwProcessId);
+				TRACE("线程ID：%d\r\n", pi.dwThreadId);
+				udp_server();//服务器
+			}
+		}
+	}
+	else if (argc == 2) {//主客户端
+		udp_client();
+	}
+	else {//从客户端
+		udp_client(false);
+	}
+
+	//iocp();
 	/*//
 	if (CEdoyunTool::IsAdmin()) {
 		if (!CEdoyunTool::Init()) return 1;
@@ -81,4 +119,21 @@ int main() {
 	}
 	//*/
 	return 0;
+}
+
+void udp_server() {
+	
+	printf("%s(%d):%s\r\n", __FILE__, __LINE__, __FUNCTION__);
+	getchar();
+}
+
+void udp_client(bool ishost) {
+	if(ishost)
+	{	
+		printf("%s(%d):%s\r\n", __FILE__, __LINE__, __FUNCTION__);
+	}
+	else 
+	{
+		printf("%s(%d):%s\r\n", __FILE__, __LINE__, __FUNCTION__);
+	}
 }
