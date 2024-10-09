@@ -85,7 +85,7 @@ public:
 
 		m_worker.store(new ::ThreadWorker(worker));
 	}
-	//true表示空闲 false表示已经分配了工作
+	//true 表示空闲 false 表示已经分配了工作
 	bool IsIdle() {
 		if (m_worker.load() == NULL)return true;
 		return !m_worker.load()->IsValid();

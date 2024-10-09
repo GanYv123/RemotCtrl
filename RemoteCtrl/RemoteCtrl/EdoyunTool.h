@@ -5,9 +5,12 @@ public:
 		std::string strOut;
 		for (size_t i = 0; i < nSize; i++) {
 			char buf[8] = "";
-			if (i > 0 && (i % 16 == 0)) strOut += "\n ";
+			if (i > 0 && (i % 16 == 0)) strOut += "\n ";  // 每16个字节换行
 			snprintf(buf, sizeof(buf), "%02X", pData[i] & 0xFF);
 			strOut += buf;
+
+			// 每两个字节插入一个空格
+			if (i % 2 == 1) strOut += " ";  // 每两个字节后加一个空格
 		}
 		strOut += "\n";
 		OutputDebugStringA(strOut.c_str());
