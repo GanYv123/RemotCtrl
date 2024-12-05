@@ -150,6 +150,70 @@ CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 
 ````
 
+## 两端数据包的发送和接收模块
+
+![client](readme/client.png)
+
+------
+
+![client](readme/server.png)
+
+### 控制发起端（客户端）
+
+#### 发送模块：
+
+````cpp
+
+````
+
+#### 接收模块：
+
+````cpp
+/** 
+ * 处理命令函数 
+ * 功能：接收并解析数据包，返回解析出的命令类型。
+ */
+int CClientSocket::DealCommand() {
+    if (m_sock == -1) return FALSE; // 无效套接字，直接返回。
+
+    char* buffer = m_buffer.data(); // 数据接收缓冲区
+    static size_t index = 0;        // 当前缓冲区数据长度
+
+    while (TRUE) {
+        // 接收数据写入缓冲区的空闲部分
+        size_t len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);
+        if (len <= 0 && index <= 0) return -1; // 连接关闭或错误
+
+        index += len; // 更新缓冲区有效数据长度
+
+        // 尝试解析缓冲区数据为 CPacket
+        len = index; 
+        m_packet = CPacket((BYTE*)buffer, len);
+
+        if (len > 0) { 
+            // 处理粘包/半包：移动未解析的数据到缓冲区头部
+            memmove(buffer, buffer + len, index - len);
+            index -= len; // 更新剩余数据长度
+            return m_packet.sCmd; // 返回命令类型
+        }
+    }
+    return -1; // 默认返回错误状态
+}
+
+````
+
+
+
+### 受控端（服务端）
+
+#### 发送模块：
+
+
+
+#### 接收模块：
+
+
+
 ## 功能设计
 
 ### 1、 驱动盘符遍历
@@ -197,7 +261,90 @@ BOOL bRet = DeleteFileA(strPath.c_str());
 lstPacket.push_back(CPacket(9, NULL, 0));
 ````
 
-### 4、 文件下载(线程)
+### 4、 文件下载
+
+客户端讲要下载的文件的路径通过数据包的形式发送给服务器，服务器解析到下载指令后执行：
+
+#### 服务/受控 端上传文件操作
+
+````cpp
+int DownloadFile(std::list<CPacket>& lstPacket, CPacket& inPacket) {
+    std::string strPath = inPacket.strData;
+    FILE* pFile = nullptr;
+
+    // 打开文件以读取
+    errno_t err = fopen_s(&pFile, strPath.c_str(), "rb");
+    long long data = 0;
+
+    // 如果文件打开失败
+    if (err != 0) {
+        // 返回文件大小为 0
+        lstPacket.push_back(CPacket(4, (BYTE*)&data, sizeof(long long)));   
+        return -1;
+    }
+
+    if (pFile != nullptr) {
+        // 获取文件大小
+        fseek(pFile, 0, SEEK_END);// 通过fseek设置文件中的索引偏移到末尾拿到文件大小
+        data = _ftelli64(pFile);
+        // 先将文件大小做成一个包发送 如果大小为0就是打开和读取时出了问题
+        lstPacket.push_back(CPacket(4, (BYTE*)&data, sizeof(long long)));
+        fseek(pFile, 0, SEEK_SET);
+		//下面是分包发送文件的函数
+        char buffer[1024] = "";
+        size_t rlen = 0;
+        do {
+            // 读取文件数据 大小1024
+            rlen = fread(buffer, 1, sizeof(buffer), pFile);
+            lstPacket.push_back(CPacket(4, (BYTE*)buffer, rlen));
+        } while (rlen == sizeof(buffer)); // 继续读取直到文件结束
+		//当读取到的大小不为缓冲区大小是 说明到末尾 就不再进行循环
+        fclose(pFile); // 关闭文件
+    } else {
+        // 如果文件指针为空
+        lstPacket.push_back(CPacket(4, NULL, 0));
+    }
+
+    return 0; // 成功返回
+}
+
+````
+
+#### 客户/控制 端接收下载操作
+
+````cpp
+void CRemoteClientDlg::UpdateDownloadFile(const std::string& strData, FILE* pFile) {
+    static LONGLONG length = 0, index = 0; // 文件总长度和已写入长度
+
+    if (length == 0) { 
+        // 第一个包：获取文件总长度
+        length = *(LONGLONG*)strData.c_str();
+        if (length == 0) { 
+            // 文件长度为 0 或无法读取，结束下载
+            CClientController::getInstance()->DownloadEnd();
+            return;
+        }
+    } 
+    else if (index >= length) { 
+        // 文件下载完成
+        fclose(pFile); // 关闭文件
+        length = index = 0; // 重置状态
+        CClientController::getInstance()->DownloadEnd();
+    } 
+    else { 
+        // 写入文件数据
+        fwrite(strData.c_str(), 1, strData.size(), pFile);
+        index += strData.size(); // 更新已写入长度
+
+        if (index >= length) { 
+            // 文件写入完成
+            fclose(pFile);
+            length = index = 0; // 重置状态
+            CClientController::getInstance()->DownloadEnd();
+        }
+    }
+}
+````
 
 
 
