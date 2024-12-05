@@ -132,32 +132,47 @@ void CClientController::threadWatchScreen(void* arg) {
 	_endthread();
 }
 
+/**
+ * CClientController::threadFunc
+ * 功能：处理消息循环，根据消息类型调用相应的处理函数。
+ */
 void CClientController::threadFunc() {
 	MSG msg;
-	while (::GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);//翻译键盘等输入的 msg
-		DispatchMessage(&msg);//分发消息
-		if (msg.message == WM_SEND_MESSAGE) {
-			MSGINFO* pmsg = (MSGINFO*)msg.wParam;
-			HANDLE hEvent = (HANDLE)msg.lParam;
+	// 消息循环，持续获取和处理消息
+	while(::GetMessage(&msg, NULL, 0, 0)){
+		// 翻译键盘和其他输入的消息，例如键盘快捷键
+		TranslateMessage(&msg);
+		// 分发消息到对应的窗口过程
+		DispatchMessage(&msg);
+
+		if(msg.message == WM_SEND_MESSAGE){
+			// 特殊消息处理：WM_SEND_MESSAGE 是自定义的消息类型，用于异步操作
+			MSGINFO* pmsg = (MSGINFO*)msg.wParam; // 消息参数结构体指针
+			HANDLE hEvent = (HANDLE)msg.lParam;  // 用于同步的事件句柄
+
+			// 查找消息处理函数
 			std::map<UINT, MSGFUNC>::iterator it = m_mapFunc.find(msg.message);
-			if (it != m_mapFunc.end()) {
+			if(it != m_mapFunc.end()){
+				// 调用对应的成员函数处理消息
 				pmsg->result = (this->*it->second)(pmsg->msg.message, pmsg->msg.wParam, pmsg->msg.lParam);
-			}
-			else {
+			} else{
+				// 未找到对应的处理函数，返回默认结果
 				pmsg->result = -1;
 			}
-			SetEvent(hEvent);//设置事件
-		}
-		else {
+
+			// 设置事件状态，通知等待线程消息已处理
+			SetEvent(hEvent);
+		} else{
+			// 普通消息处理
 			std::map<UINT, MSGFUNC>::iterator it = m_mapFunc.find(msg.message);
-			if (it != m_mapFunc.end()) {
+			if(it != m_mapFunc.end()){
+				// 调用对应的成员函数处理消息
 				(this->*it->second)(msg.message, msg.wParam, msg.lParam);
 			}
 		}
-
 	}
 }
+
 
 unsigned int __stdcall CClientController::threadEntry(void* arg) {
 	CClientController* thiz = (CClientController*)arg;

@@ -136,28 +136,49 @@ void CClientSocket::Dump(BYTE* pData, size_t nSize) {
 	strOut += "\n";
 	OutputDebugStringA(strOut.c_str());
 }
-/** 处理命令 */
+
+/**
+ * 处理命令函数
+ * 功能：接收数据包并解析命令，通过套接字接收数据，解析为 CPacket 对象，返回解析出的命令类型。
+ * 注意：存在多线程冲突和粘包/半包问题的处理。
+ */
 int CClientSocket::DealCommand() {
-	if (m_sock == -1) return FALSE;
-	char* buffer = m_buffer.data(); //多线程发送命令时会出现冲突
-	static size_t index = 0;
-	while (TRUE) {
+	if(m_sock == -1) return FALSE; // 如果套接字无效，直接返回 FALSE（异常状态）。
+
+	char* buffer = m_buffer.data(); // 数据接收缓冲区，注意：直接使用成员变量可能导致多线程冲突。
+	static size_t index = 0;        // 静态变量，用于记录当前缓冲区中的数据长度，多线程环境下可能引发问题。
+
+	while(TRUE){
+		// 接收数据：
+		// recv 函数从 m_sock 套接字接收数据，写入 buffer 的空闲区域（从 buffer + index 开始）。
 		size_t len = recv(m_sock, buffer + index, BUFFER_SIZE - index, 0);
-		if (((int)len <= 0) && ((int)index <= 0)) {
-			return -1;
+
+		// 如果接收失败并且缓冲区中无残留数据，认为连接关闭或发生错误。
+		if(((int)len <= 0) && ((int)index <= 0)){
+			return -1; // 返回错误状态，表示接收失败。
 		}
-		//Dump((BYTE*)buffer, index);
+
+		// 累加接收到的数据长度到 index，表示缓冲区中有效数据的总长度。
 		index += len;
-		len = index;
-		m_packet = CPacket((BYTE*)buffer, len);
-		if (len > 0) {
-			memmove(buffer, buffer + len, index - len);
-			index -= len;
+
+		// 将缓冲区中的数据尝试解析为 CPacket 对象。
+		len = index; // 假设整个缓冲区中都有可能构成完整的数据包。
+		m_packet = CPacket((BYTE*)buffer, len); // 调用 CPacket 的构造函数解析数据包。
+
+		if(len > 0){ // 如果成功解析出一个完整的数据包：
+			// 处理粘包/半包问题：
+			// 将剩余未处理的数据移动到缓冲区的开头，确保下一次解析能正确进行。
+			memmove(buffer, buffer + len, index - len); // 移动剩余数据到缓冲区开头。
+			index -= len; // 更新缓冲区中未处理数据的长度。
+
+			// 返回当前数据包的命令字段（m_packet.sCmd），表示解析成功。
 			return m_packet.sCmd;
 		}
 	}
-	return -1;
+
+	return -1; // 默认返回 -1，表示未能成功接收或解析数据。
 }
+
 
 BOOL CClientSocket::Send(const char* pData, int nSize) {
 	if (m_sock == -1) return FALSE;
