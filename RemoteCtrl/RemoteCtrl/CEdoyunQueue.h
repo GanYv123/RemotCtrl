@@ -182,9 +182,6 @@ protected:
 	std::atomic<bool> m_lock;//队列正在析构
 };
 
-
-
-
 template<class T>
 class EdoyunSendQueue :public CEdoyunQueue<T>, public ThreadFuncBase {
 public:

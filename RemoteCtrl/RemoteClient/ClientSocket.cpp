@@ -172,59 +172,78 @@ BOOL CClientSocket::Send(const CPacket& pack) {
 	return send(m_sock, strOut.c_str(), strOut.size(), 0) > 0;
 }
 
+/**
+ * 发送数据包并接收服务器的响应
+ *
+ * @param nMsg  消息类型（此处未使用）
+ * @param wParam 包含发送数据的指针（PACKET_DATA 结构体）
+ * @param lParam 接收响应的窗口句柄 (HWND)
+ */
 void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam) {
-	//定义一个消息的数据结构(数据,数据长度，模式),回调消息的数据结构(HWND)
-	PACKET_DATA data = *(PACKET_DATA*)wParam;
-	delete (PACKET_DATA*)wParam;
-	size_t nTemp = data.strData.size();
-	HWND hWnd = (HWND)lParam;
-	CPacket current((BYTE*)data.strData.c_str(), nTemp);
-	if (initSocket() == TRUE) {
-		//send Packet
+	// 1. 解析数据结构
+	PACKET_DATA data = *(PACKET_DATA*)wParam; // 提取数据
+	delete (PACKET_DATA*)wParam; // 释放动态分配的内存
+
+	size_t nTemp = data.strData.size(); // 数据长度
+	HWND hWnd = (HWND)lParam;           // 接收消息的窗口句柄
+	CPacket current((BYTE*)data.strData.c_str(), nTemp); // 封装成数据包对象
+
+	// 2. 初始化套接字
+	if(initSocket() == TRUE){
+		// 3. 发送数据包
 		int ret = send(m_sock, (char*)data.strData.c_str(), (int)data.strData.size(), 0);
-		if (ret > 0) {
-			size_t index = 0;
-			std::string strBuffer;
+		if(ret > 0){ // 数据发送成功
+			size_t index = 0; // 当前接收缓冲区的有效数据索引
+			std::string strBuffer; // 缓冲区
 			strBuffer.resize(BUFFER_SIZE);
 			char* pBuffer = (char*)strBuffer.c_str();
-			while (m_sock != INVALID_SOCKET) {//如果套接字还未关闭
-				//recv packet
-				int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0);
-				if ((length > 0) || (index > 0)) {
-					index += (size_t)length;
-					size_t nLen = index;
-					CPacket pack((BYTE*)pBuffer, nLen);
-					if (nLen > 0) {
+
+			// 4. 循环接收数据包
+			while(m_sock != INVALID_SOCKET){ // 套接字有效时继续接收
+				int length = recv(m_sock, pBuffer + index, BUFFER_SIZE - index, 0); // 接收数据
+				if((length > 0) || (index > 0)){ // 收到数据或存在未处理的残留数据
+					index += (size_t)length; // 更新有效数据索引
+					size_t nLen = index;    // 数据长度
+					CPacket pack((BYTE*)pBuffer, nLen); // 尝试解析数据包
+
+					if(nLen > 0){ // 数据包解析成功
+						// 打印调试信息
 						TRACE("ack pack %d to hWnd %08X i:%d len:%d\r\n", pack.sCmd, hWnd, index, nLen);
 						TRACE("%04X\r\n", *(WORD*)(pBuffer + nLen));
+
+						// 发送解析成功的消息给目标窗口
 						::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(pack), data.wParam);
-						if (data.nMode & CSM_AUTOCLOSE) {
+
+						// 根据模式自动关闭套接字
+						if(data.nMode & CSM_AUTOCLOSE){
 							CloseSocket();
 							return;
 						}
+
+						// 处理剩余未解析的数据
 						index -= nLen;
-						memmove(pBuffer, pBuffer + nLen, index);
+						memmove(pBuffer, pBuffer + nLen, index); // 移动剩余数据到缓冲区起始位置
 					}
-				}
-				else {//TODO:对方关闭套接字或者网络设备异常
+				} else{ // 未收到数据或网络异常
 					TRACE("recv failed length %d index %d\r\n");
 					CloseSocket();
+
+					// 通知接收窗口异常情况
 					::SendMessage(hWnd, WM_SEND_PACK_ACK, (WPARAM)new CPacket(current.sCmd, NULL, 0), 1);
 				}
 			}
-		}
-		else {
+		} else{ // 数据发送失败
 			CloseSocket();
-			//网络终止处理
-			::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -1);
+			::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -1); // 通知窗口网络错误
 		}
-	}
-	else {
-		//TODO:init 错误处理
+	} else{
+		// 套接字初始化失败，通知窗口错误
 		::SendMessage(hWnd, WM_SEND_PACK_ACK, NULL, -2);
 	}
-
 }
+
+
+
 BOOL CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, BOOL isAutoClosed, WPARAM wParam) {
 	UINT nMode = isAutoClosed ? CSM_AUTOCLOSE : 0;
 	std::string strOut;
@@ -234,6 +253,7 @@ BOOL CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, BOOL isAutoClosed
 	if (ret == FALSE) delete pData;
 	return ret;
 }
+
 BOOL CClientSocket::getFilePath(std::string& strPath) {
 	if ((m_packet.sCmd == 2)
 		|| (m_packet.sCmd == 3)
