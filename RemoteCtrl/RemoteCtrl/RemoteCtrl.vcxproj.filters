@@ -33,6 +33,33 @@
     <ClInclude Include="ServerSocket.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="LockInfoDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="EdoyunTool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Command.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CEdoyunQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="EdoyunThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="EdoyunServer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ESocket.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ENetWork.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RemoteCtrl.cpp">
@@ -42,6 +69,21 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ServerSocket.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LockInfoDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="EdoyunTool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Command.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="EdoyunServer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ENetWork.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
