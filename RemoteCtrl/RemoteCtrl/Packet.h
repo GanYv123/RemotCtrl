@@ -22,6 +22,7 @@ public:
 	}
 
 	/**
+	 * 数据包的解包
 	 * @argument:
 	 * nSize:数据的字节大小
 	 */
@@ -72,6 +73,12 @@ public:
 
 	}
 
+	/**
+	 * 数据包的封包
+	 * @param nCmd 
+	 * @param pData 
+	 * @param nSize 
+	 */
 	CPacket(WORD nCmd, const BYTE* pData, size_t nSize) {
 		sHead = 0xFEFF;
 		nLength = nSize + 4;//数据长度 = cmd + 校验

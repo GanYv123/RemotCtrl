@@ -46,7 +46,7 @@ inline RecvOverlapped<op>::RecvOverlapped() {
 template<EdoyunOperator op>
 inline SendOverlapped<op>::SendOverlapped() {
 	m_operator = op;
-	m_worker = ThreadWorker(this, FUNCTYPE & SendOverlapped<op>::SendWorker);
+	m_worker = ThreadWorker(this, (FUNCTYPE) & SendOverlapped<op>::SendWorker);
 	memset(&m_overlapped, 0, sizeof(m_overlapped));
 	m_buffer.resize(1024 * 256);
 }

@@ -9,6 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteClient", "RemoteClien
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{41B6CDDA-2B2D-4726-AAB5-12DEA96D5ED6}"
 	ProjectSection(SolutionItems) = preProject
+		MFC远控项目.md = MFC远控项目.md
 		远程控制系统设计.uml = 远程控制系统设计.uml
 	EndProjectSection
 EndProject

@@ -41,6 +41,9 @@ protected:
 		return 0;
 	}
 
+	/**
+	 * 锁机 函数
+	 */
 	void threadLockDlgMain() {
 		TRACE("%s(%d) %d\r\n", __FUNCTION__, __LINE__, GetCurrentThreadId());
 		dlg.Create(IDD_DIALOG_INFO, NULL);
@@ -85,17 +88,30 @@ protected:
 		dlg.DestroyWindow();
 	}
 
-	int MakeDriverInfo(std::list<CPacket>& lstPacket, CPacket& inPacket) {//1==>A 2==>B ...
+	int MakeDriverInfo(std::list<CPacket>& lstPacket, CPacket& inPacket) {
+		// 初始化用于存储结果的字符串
 		std::string result;
-		for (int i = 1; i <= 26; i++) { //改变当前驱动
-			if (_chdrive(i) == 0) {
-				result += 'A' + i - 1; //C,D,F,
-				if (result.size()) {
-					result += ',';
+		// 循环遍历字母驱动器 A 到 Z，对应 ASCII 值 65 到 90
+		for(int i = 1; i <= 26; i++){ // 改变当前驱动器
+			// 使用 _chdrive 函数尝试切换到驱动器 i
+			// _chdrive(i) 返回值为 0 表示驱动器有效
+			if(_chdrive(i) == 0){
+				// 如果驱动器有效，将对应字母追加到结果字符串
+				result += 'A' + i - 1; // 例如，i = 3 时，'A' + 2 = 'C'
+				// 如果结果字符串已非空（至少包含一个驱动器）
+				// 则添加逗号作为分隔符
+				if(result.size()){
+					result += ','; // 示例结果格式：C,D,F,
 				}
 			}
 		}
+		// 将生成的驱动器信息字符串存储到 CPacket 中
+		// 参数说明：
+		// 1 - 包的命令号
+		// (BYTE*)result.c_str() - 驱动器信息数据的指针
+		// result.size() - 数据的长度
 		lstPacket.push_back(CPacket(1, (BYTE*)result.c_str(), result.size()));
+		// 返回值 0 表示操作成功
 		return 0;
 	}
 
