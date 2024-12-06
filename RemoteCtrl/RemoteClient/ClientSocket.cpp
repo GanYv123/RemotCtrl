@@ -264,16 +264,38 @@ void CClientSocket::SendPack(UINT nMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 
-
+/**
+ * @brief 发送数据包给线程以异步处理
+ *
+ * @param hWnd         用于接收响应消息的窗口句柄。
+ * @param pack         需要发送的数据包，封装为 CPacket 对象。
+ * @param isAutoClosed 如果为 TRUE，表示自动关闭模式，处理完数据后自动清理。
+ * @param wParam       附加的用户自定义数据，可在处理时使用。
+ * @return BOOL        返回 TRUE 表示发送成功，FALSE 表示发送失败。
+ */
 BOOL CClientSocket::SendPacket(HWND hWnd, const CPacket& pack, BOOL isAutoClosed, WPARAM wParam) {
+	// 确定模式标志：如果 isAutoClosed 为 TRUE，设置为 CSM_AUTOCLOSE；否则为 0
 	UINT nMode = isAutoClosed ? CSM_AUTOCLOSE : 0;
+
+	// 序列化数据包内容为字符串形式存储到 strOut 中
 	std::string strOut;
 	pack.Data(strOut);
+
+	// 动态分配一个 PACKET_DATA 对象，用于包装数据包内容和附加信息
+	// 构造时传入数据内容、数据长度、模式标志和用户参数
 	PACKET_DATA* pData = new PACKET_DATA(strOut.c_str(), strOut.size(), nMode, wParam);
+
+	// 将消息发送到指定线程的消息队列，使用 WM_SEND_PACK 消息
+	// m_nThreadID 是目标线程的 ID，pData 是消息的附加数据，hWnd 是处理结果的接收者
 	BOOL ret = PostThreadMessage(m_nThreadID, WM_SEND_PACK, (WPARAM)pData, (LPARAM)hWnd);
-	if (ret == FALSE) delete pData;
+
+	// 如果消息发送失败，删除动态分配的 PACKET_DATA 避免内存泄漏
+	if(ret == FALSE) delete pData;
+
+	// 返回发送结果
 	return ret;
 }
+
 
 BOOL CClientSocket::getFilePath(std::string& strPath) {
 	if ((m_packet.sCmd == 2)
