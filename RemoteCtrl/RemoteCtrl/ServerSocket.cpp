@@ -50,32 +50,58 @@ BOOL CServerSocket::initSocket(short port) {
 }
 
 int CServerSocket::Run(SOCK_CALLBACK callback, void* arg, short port) {
+	// 初始化服务器套接字，绑定到指定端口
 	bool ret = initSocket(port);
-	if (ret == false) return -1;
+	if(ret == false){
+		return -1; // 初始化失败，返回错误码 -1
+	}
+
+	// 用于存储需要发送的响应数据包
 	std::list<CPacket> lstPackets;
-	m_callback = callback;
-	m_arg = arg;
+
+	// 设置回调函数及其参数，用于处理业务逻辑
+	m_callback = callback; // 回调函数指针
+	m_arg = arg;           // 回调函数的附加参数
+
+	// 计数器，用于记录连续客户端连接失败次数
 	int count = 0;
-	while (true) {
-		if (AcceptClient() == false) {
-			if (count >= 3) {
-				return -2;
+
+	// 主循环：处理客户端请求
+	while(true){
+		// 等待并接受客户端连接
+		if(AcceptClient() == false){
+			// 如果连接失败，累加失败次数
+			if(count >= 3){
+				return -2; // 如果失败次数达到 3 次，退出程序返回错误码 -2
 			}
 			count++;
+			continue; // 跳过本次循环，继续等待连接
 		}
+
+		// 处理客户端命令并获取返回值
 		int ret = DealCommand();
-		if (ret > 0) {
-			m_callback(m_arg, ret,lstPackets,m_packet);
-			while (lstPackets.size() > 0) {
+
+		// 如果有有效的返回值
+		if(ret > 0){
+			// 调用用户自定义回调函数（runCommand），传入必要参数
+			m_callback(m_arg, ret, lstPackets, m_packet);
+
+			// 遍历待发送的响应数据包列表
+			while(!lstPackets.empty()){
+				// 发送列表中的第一个数据包到客户端
 				Send(lstPackets.front());
+				// 删除已发送的数据包
 				lstPackets.pop_front();
 			}
 		}
+
+		// 关闭当前客户端连接
 		closeClient();
 	}
 
-	return 0;
+	return 0; // 正常结束，返回 0
 }
+
 
 BOOL CServerSocket::AcceptClient() {
 	TRACE("enter AcceptClient()\r\n");

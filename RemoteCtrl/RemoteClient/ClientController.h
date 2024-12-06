@@ -60,8 +60,8 @@ protected:
 	void threadWatchScreen();
 	static void threadWatchScreen(void* arg);
 	CClientController() :
-		m_statusDlg(&m_remoteDlg),
-		m_watchDlg(&m_remoteDlg) 
+		m_watchDlg(&m_remoteDlg),
+		m_statusDlg(&m_remoteDlg) 
 	{
 		m_isClosed = TRUE;
 		m_hThreadWatch = INVALID_HANDLE_VALUE;

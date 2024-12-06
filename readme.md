@@ -53,12 +53,12 @@
 ### 数据包的结构
 
 ````c++
-	WORD sHead;			//固定位FEFF
-	DWORD nLength;		//包长度：控制命令 到 校验 结束
-	WORD sCmd;			//控制命令
-	std::string strData;//包数据
-	WORD sSum;			//和校验
-	std::string strOut; //整包数据
+	WORD sHead;				//固定位FEFF
+	DWORD nLength;			//包长度：控制命令 到 校验 结束
+	WORD sCmd;				//控制命令
+	std::string strData;	//包数据
+	WORD sSum;				//和校验
+	std::string strOut; 	//整包数据
 ````
 
 ### 数据包的解包封包
@@ -314,11 +314,9 @@ ON_MESSAGE(WM_SEND_PACK_ACK, &CWatchDialog::OnSendPacketAck)
 
 ![client](readme/server.png)
 
-#### 发送模块：
+先接收来自客户端的命令，处理完成命令后，通过拿到的命令执行对应映射关系的函数，将要发送的包存储到回包列表中，执行完回调函数后才进行回包的统一发送
 
 
-
-#### 接收模块：
 
 
 
@@ -333,6 +331,8 @@ if(_chdrive(i) == 0){
 	result += 'A' + i - 1; // 例如，i = 3 时，'A' + 2 = 'C'
 }
 ````
+
+
 
 ### 2、 文件遍历
 
@@ -358,6 +358,8 @@ int MakeDirectoryInfo(std::list<CPacket>& lstPacket, CPacket& inPacket) {
 
 ````
 
+
+
 ### 3、 文件删除
 
 ````c++
@@ -368,6 +370,8 @@ BOOL bRet = DeleteFileA(strPath.c_str());
 // 向包列表中添加删除操作的结果
 lstPacket.push_back(CPacket(9, NULL, 0));
 ````
+
+
 
 ### 4、 文件下载
 
@@ -455,11 +459,68 @@ void CRemoteClientDlg::UpdateDownloadFile(const std::string& strData, FILE* pFil
 }
 ````
 
+
+
 ### 5、 图传操作/屏幕监控
 
-**1.控制端先发起请求**
+**1.控制端开启线程发起请求**
 
-`sendPackets`
+````cpp
+void CClientController::StartWatchScreen() {
+    // 设置标志位，表示线程未关闭
+    m_isClosed = FALSE;
+
+    // 启动后台线程，用于监控远程屏幕
+    // 将当前类实例 `this` 作为参数传递给线程
+    m_hThreadWatch = (HANDLE)_beginthread(
+        &CClientController::threadWatchScreen, // 线程函数指针
+        0,                                    // 默认堆栈大小
+        this                                  // 传递给线程的参数
+    );
+
+    // 显示监控对话框，进入模态状态
+    m_watchDlg.DoModal();
+
+    // 在对话框关闭后设置标志位，通知线程结束
+    m_isClosed = TRUE;
+
+    // 等待后台线程结束，超时时间为 500 毫秒
+    WaitForSingleObject(m_hThreadWatch, 500);
+}
+````
+
+````c++
+void CClientController::threadWatchScreen() {
+    // 延时启动，确保线程运行时相关资源已初始化
+    Sleep(50);
+    // 用于记录上一次发送命令的时间戳（毫秒）
+    ULONGLONG nTick = GetTickCount64();
+    
+    // 主线程循环：持续监控屏幕，直到 `m_isClosed` 被置为 true
+    while (!m_isClosed) {
+        // 检查是否可以缓存新的图片
+        if (!m_watchDlg.isFull()) { 
+            // 当前时间与上次发送命令的间隔不足 200ms 时，主动等待
+            if (GetTickCount64() - nTick < 200) {
+                Sleep(200 - (DWORD)(GetTickCount64() - nTick)); // 补足等待时间
+            }
+            // 更新时间戳为当前时间
+            nTick = GetTickCount64();
+            // 发送请求图片的命令数据包，指令类型为 6
+            int ret = SendCommandPacket(
+                m_watchDlg.GetSafeHwnd(), // 窗口句柄，指向对话框 `m_watchDlg`
+                6,                        // 指令代码 6：请求屏幕图片
+                true,                     // 表示是否需要响应
+                NULL,                     // 数据指针，此处为空表示无附加数据
+                0                         // 数据长度为 0
+            );
+        } else {
+            // 如果缓存已满，则短暂休眠 1 毫秒以避免 CPU 占用过高
+            Sleep(1);
+        }
+    }
+}
+````
 
 **2.被控端操作：**
 
@@ -480,9 +541,69 @@ CImage 初始化并保存屏幕内容
 
 **3.控制端操作：**
 
+**`watchDlg` 中有和自定义消息绑定函数，将接收到的回包发送到 `watchDlg`  窗体来处理**
+
+````cpp
+LRESULT CWatchDialog::OnSendPacketAck(WPARAM wParam, LPARAM lParam) {
+    // 检查 lParam 是否有效，略去非关键逻辑
+    if (lParam > 0) { 
+        CPacket* pPack = (CPacket*)wParam; // 接收到的数据包
+        if (pPack != NULL) { 
+            CPacket head = *(CPacket*)wParam; // 提取数据包头部信息
+            delete (CPacket*)wParam;         // 释放动态分配的内存
+   //<<---------------------------------------------------------->>
+            switch (head.sCmd) { 
+            case 6: // 指令 6：处理图片更新逻辑
+                // 1. 将字节流转换为图像对象
+                CEdoyunTool::Byte2Image(m_image, head.strData);
+                // 2. 获取图片控件的显示区域大小
+                CRect rect;
+                m_picture.GetWindowRect(rect);
+                // 3. 更新图像对象的宽高信息
+                m_nObjWidth = m_image.GetWidth();
+                m_nObjHeight = m_image.GetHeight();
+                // 4. 将图像绘制到控件上（缩放适配控件大小）
+                m_image.StretchBlt(
+                    m_picture.GetDC()->GetSafeHdc(), // 控件的设备上下文
+                    0, 0,                           // 目标区域的起点坐标
+                    rect.Width(), rect.Height(),    // 目标区域的宽高
+                    SRCCOPY                         // 绘制模式
+                );
+                // 5. 触发控件重绘以显示新图像
+                m_picture.InvalidateRect(NULL);
+                // 6. 销毁图像资源以释放内存
+                m_image.Destroy();
+
+
+            }
+        }
+    }
+    return 0; // 返回消息处理结果
+}
+
+````
+
 
 
 ### 6、 鼠标操作
+
+````cpp
+// 控制端和被控端都定义了该结构体来传输和接收鼠标操作信息
+typedef struct MouseEvent {
+	MouseEvent() {
+		nAction = 0;
+		nButton = -1;
+		ptXY.x = 0;
+		ptXY.y = 0;
+	}
+
+	WORD nAction;	//点击 移动 双击
+	WORD nButton;	//左键右键中键
+	POINT ptXY;		//坐标
+}MOUSEEV, * PMOUSEEV;
+
+//控制端发送信息 被控端拿到并解析出信息 再调用系统操控鼠标的api
+````
 
 
 
@@ -543,27 +664,83 @@ void threadLockDlgMain() {
 
 ### 8、 管理员启动
 
+关于管理员启动用了如下办法：
+
+#### 判断是否以管理员身份运行
+
+> Windows 提供了权限控制机制，可以通过检查当前进程的令牌（token）是否具有提升权限（elevated privilege）来判断是否以管理员身份运行
+
+#### 以管理员身份运行程序
+
+> 当程序不是以管理员身份运行时，可以重新启动当前程序，并以管理员权限运行。这里使用了 `CreateProcessWithLogonW` 函数
+
 
 
 ### 9、 开机自启
 
-
+- 修改注册表 `"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";`
+- 添加文件到自启动文件夹 `"C:\Users\op\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\"`
 
 
 
 # WINDOWS消息机制
 
-## 消息机制在该程序中的应用
+> Windows 消息机制是 Windows 操作系统中一个核心的事件驱动模型，允许应用程序响应用户输入和系统事件
 
-消息机制主要用在控制发起端（client）带有可视化操作的那一端
+## 一、底层实现
 
+**消息队列**：
 
+- 每个线程都有一个消息队列（Message Queue），用于存储该线程接收到的消息。
+- 操作系统负责管理消息队列，将消息放入队列中。
 
+**消息结构**：
 
+- 消息通过 `MSG` 结构体表示，结构体中包含消息类型、窗口句柄、消息参数等信息：
 
+````cpp
+typedef struct tagMSG {
+    HWND   hwnd;       // 消息的目标窗口句柄
+    UINT   message;    // 消息的类型
+    WPARAM wParam;     // 附加消息参数
+    LPARAM lParam;     // 附加消息参数
+    DWORD  time;       // 消息的时间戳
+    POINT  pt;         // 消息发生时的光标位置
+} MSG, *PMSG;
 
+````
+
+**消息循环**：
+
+- 应用程序通常会运行一个消息循环，使用 `GetMessage` 函数从消息队列中检索消息，直到收到退出消息：
+
+````cpp
+MSG msg;
+while (GetMessage(&msg, NULL, 0, 0)) {
+    TranslateMessage(&msg);  // 翻译虚拟键消息
+    DispatchMessage(&msg);    // 派发消息到窗口过程
+}
+
+````
+
+**消息发送**：
+
+- 消息可以通过  SendMessage 或 PostMessage
+
+   函数发送到指定窗口。区别在于：
+
+  - `SendMessage` 是同步调用，发送后会等待目标窗口处理完毕；
+  - `PostMessage` 是异步调用，将消息放入目标窗口的消息队列中，立即返回。
+
+------
 
 # UDP内网穿透
+
+
+
+
+
+
 
 
 
@@ -591,6 +768,8 @@ void threadLockDlgMain() {
 - IOCP 支持动态分配线程处理任务，避免线程竞争，最大化 CPU 利用率。
 
 ## IOCP如何结合线程池使用
+
+
 
 
 

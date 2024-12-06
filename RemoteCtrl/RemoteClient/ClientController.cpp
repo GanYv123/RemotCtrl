@@ -98,7 +98,6 @@ void CClientController::StartWatchScreen() {
 	m_watchDlg.DoModal();
 	m_isClosed = TRUE;
 	WaitForSingleObject(m_hThreadWatch, 500);
-
 }
 
 void CClientController::threadWatchScreen() {

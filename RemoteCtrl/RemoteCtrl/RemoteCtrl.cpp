@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 	}
 	clearsock();
 	//iocp();
-	/*//
+	//*//
 	if (CEdoyunTool::IsAdmin()) {
 		if (!CEdoyunTool::Init()) return 1;
 		if (ChooseAutoInvoke(INVOKE_PATH)) {
