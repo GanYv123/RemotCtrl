@@ -1,5 +1,16 @@
 # MFC远控项目
 
+基于 C++、MFC 和 TCP/IP 的 Windows 远程控制学习项目，包含控制端和被控端，涉及远程文件浏览、文件下载、屏幕查看及鼠标控制。
+
+## 快速开始
+
+1. 克隆仓库：`git clone https://github.com/GanYv123/RemotCtrl.git`。
+2. 使用 Visual Studio 2022 打开 `RemoteCtrl/RemoteCtrl.sln`，安装“使用 C++ 的桌面开发”、MFC 组件和 Windows SDK。
+3. 选择相同的构建配置和架构，编译 `RemoteCtrl`（被控端）与 `RemoteClient`（控制端）。
+4. 先启动被控端，再在控制端填写被控端 IP 和端口后连接；默认服务端端口为 `2233`，需与客户端设置一致。
+
+下面保留项目实现笔记和通信流程说明。
+
 ## 编译环境
 
 1、 编译工具：vs2022
